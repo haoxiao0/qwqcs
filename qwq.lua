@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "3.0",
+    SubTitle = "3.3",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -2750,9 +2750,16 @@ Players.PlayerRemoving:Connect(UpdateSinglePlayerList)
 
 
 Tabs.Tool:AddButton({
-    Title = "飞行",
+    Title = "飞行1.0",
     Callback = function()
 loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/fly(qwq).lua"))()
+    end
+})
+
+Tabs.Tool:AddButton({
+    Title = "飞行2.0",
+    Callback = function()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqfly2.0.lua"))()
     end
 })
 
