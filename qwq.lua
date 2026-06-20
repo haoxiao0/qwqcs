@@ -15,7 +15,7 @@ local Window = Fluent:CreateWindow({
 
 local Tabs = {
     Qwqe = Window:AddTab({ Title = "QwQ", Icon = "rbxassetid://6558374856" }),
-    Qwqa = Window:AddTab({ Title = "这是空的", Icon = "rbxassetid://6558374856" }),
+    Qwqa = Window:AddTab({ Title = "功能", Icon = "rbxassetid://6558374856" }),
     Player = Window:AddTab({ Title = "人物", Icon = "rbxassetid://6558374856" }),
     ESP = Window:AddTab({ Title = "ESP", Icon = "rbxassetid://6558374856" }),
     Aimbot = Window:AddTab({ Title = "自瞄", Icon = "rbxassetid://5205790785" }),
