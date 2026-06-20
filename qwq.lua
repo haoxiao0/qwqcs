@@ -2752,7 +2752,7 @@ Players.PlayerRemoving:Connect(UpdateSinglePlayerList)
 Tabs.Tool:AddButton({
     Title = "飞行",
     Callback = function()
-loadstring(Game:HttpGet("https://raw.githubusercontent.com/JsYb666/Item/refs/heads/main/Fly"))()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/fly(qwq).lua"))()
     end
 })
 
