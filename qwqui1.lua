@@ -5530,7 +5530,7 @@ function Library:CreateWindow(Config)
 	end
 
 	Library.MinimizeKey = Config.MinimizeKey or Enum.KeyCode.LeftControl
-	Library.Theme = "Dark"
+	Library.Theme = "SoftCream"
 
 	local Window = Components.Window({
 		Parent = GUI,
