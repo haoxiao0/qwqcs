@@ -5598,7 +5598,7 @@ if Mobile then
 	    Draggable = true
     }, {
         New("UICorner", {
-            CornerRadius = UDim.new(0, 10)
+            CornerRadius = UDim.new(0, 5)
         })
     })
     AddSignal(MinimizeButton.MouseButton1Click, function()
