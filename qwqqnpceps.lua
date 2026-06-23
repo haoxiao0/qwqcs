@@ -2750,14 +2750,14 @@ Players.PlayerRemoving:Connect(UpdateSinglePlayerList)
 
 
 Tabs.Tool:AddButton({
-    Title = "飞行1.0",
+    Title = "tp飞行",
     Callback = function()
-loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqfly1.0.lua"))()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/tpfly.lua"))()
     end
 })
 
 Tabs.Tool:AddButton({
-    Title = "飞行2.0",
+    Title = "飞行",
     Callback = function()
 loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqfly2.0.lua"))()
     end
