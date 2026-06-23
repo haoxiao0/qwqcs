@@ -405,6 +405,98 @@ Tabs.Qwqe:AddButton({
 -- ==========================================
 
 
+
+-- =============================================================================
+-- [UI 实例创建]
+-- =============================================================================
+local PerformanceGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+local FPSLabel = Instance.new("TextLabel")
+
+PerformanceGui.Name = "QWQ_Beautiful_HUD"
+PerformanceGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+PerformanceGui.ResetOnSpawn = false
+
+-- 面板靠右上角贴边，留出安全间距
+MainFrame.Parent = PerformanceGui
+MainFrame.BackgroundTransparency = 1
+MainFrame.Position = UDim2.new(1, -150, 0, 15)
+MainFrame.Size = UDim2.new(0, 135, 0, 30) -- 移除了Ping，高度由60缩减至30
+
+UIListLayout.Parent = MainFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+
+-- 统一的高级质感渲染函数
+local function configureLabel(label, order)
+    label.Size = UDim2.new(1, 0, 0, 24)
+    label.BackgroundTransparency = 0.25 -- 适度的半透明玻璃感
+    label.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- 深邃暗蓝底色
+    label.Font = Enum.Font.RobotoMono -- 极客感等宽字体
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.Visible = false
+    label.LayoutOrder = order
+    
+    -- 柔和外边框
+    local stroke = Instance.new("UIStroke", label)
+    stroke.Color = Color3.fromRGB(45, 45, 55)
+    stroke.Thickness = 1
+    
+    -- 圆角剪裁
+    local corners = Instance.new("UICorner", label)
+    corners.CornerRadius = UDim.new(0, 5)
+    
+    label.Parent = MainFrame
+end
+
+configureLabel(FPSLabel, 1)
+
+-- =============================================================================
+-- [动态刷新驱动] 每 0.2 秒高频刷新 FPS
+-- =============================================================================
+local fpsCount = 0
+local lastUpdateTime = os.clock()
+
+RunService.RenderStepped:Connect(function()
+    fpsCount = fpsCount + 1
+    local now = os.clock()
+    
+    -- 精确限制为每 0.2 秒刷新一次，保证实时性的同时防止 CPU 异常占用
+    if now - lastUpdateTime >= 0.2 then
+        
+        -- 计算并更新 FPS
+        local currentFps = math.floor(fpsCount / (now - lastUpdateTime))
+        FPSLabel.Text = "FPS: " .. currentFps
+        
+        -- 根据帧率健康度动态变色
+        if currentFps >= 55 then
+            FPSLabel.TextColor3 = Color3.fromRGB(90, 220, 140) -- 极佳：质感绿
+        elseif currentFps >= 35 then
+            FPSLabel.TextColor3 = Color3.fromRGB(240, 190, 90) -- 警告：温暖黄
+        else
+            FPSLabel.TextColor3 = Color3.fromRGB(240, 100, 100) -- 极差：警示红
+        end
+        
+        -- 重置计数器和时间
+        fpsCount = 0
+        lastUpdateTime = now
+    end
+end)
+
+-- =============================================================================
+-- [UI 开关控制对接]
+-- =============================================================================
+Tabs.Qwqa:AddSection("屏幕贴边数据显示")
+
+Tabs.Qwqa:AddToggle("ShowFPS_Toggle", { 
+    Title = "显示帧率 (FPS)", 
+    Description = "屏幕右上角显示实时FPS", 
+    Default = false, 
+    Callback = function(v) FPSLabel.Visible = v end 
+})
+
 local customFOVEnabled = false
 local customFOVValue = 70
 
