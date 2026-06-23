@@ -56,7 +56,7 @@ TextLabel.BackgroundTransparency = 1
 TextLabel.Position = UDim2.new(0, 0, 0, 0)
 TextLabel.Size = UDim2.new(40/180, 0, 1, 0)
 TextLabel.Font = Enum.Font.SourceSansBold
-TextLabel.Text = "qwqfiy"
+TextLabel.Text = "qwqtpfiy"
 TextLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 TextLabel.TextScaled = true
 
