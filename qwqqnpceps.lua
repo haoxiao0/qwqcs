@@ -497,6 +497,135 @@ Tabs.Qwqa:AddToggle("ShowFPS_Toggle", {
 })
 
 
+- ==========================================================
+-- 【功能构建】：8向虚拟轮盘键盘 (移动端丝滑走位版)
+-- ==========================================================
+if Tabs and Tabs.Qwqa then
+    Tabs.Qwqa:AddSection("🕹️ 虚拟键盘 (移动端移动辅助)")
+
+    -- 1. 创建独立 GUI 容器
+    local DPadGui = game:GetService("CoreGui"):FindFirstChild("QWQ_DPad_GUI") or Instance.new("ScreenGui")
+    DPadGui.Name = "QWQ_DPad_GUI"
+    DPadGui.Parent = game:GetService("CoreGui")
+    DPadGui.ResetOnSpawn = false
+    DPadGui.Enabled = false -- 初始隐藏
+
+    -- 2. 方向键容器 (坐标已整体向右上角平移，防边缘误触)
+    local DPadContainer = Instance.new("Frame")
+    DPadContainer.Parent = DPadGui
+    DPadContainer.Size = UDim2.new(0, 160, 0, 160)
+    -- 原为 (0, 40, 1, -220)，现往右移 40px，往上移 40px (负值变大)
+    DPadContainer.Position = UDim2.new(0, 80, 1, -260) 
+    DPadContainer.BackgroundTransparency = 1
+
+    -- 3. 按键生成模板函数 (支持传入多个按键实现斜向移动)
+    local function CreateDPadButton(name, text, pos, keycodes)
+        local btn = Instance.new("TextButton")
+        btn.Name = name
+        btn.Parent = DPadContainer
+        btn.Size = UDim2.new(0, 50, 0, 50) -- 50x50px
+        btn.Position = pos
+        btn.BackgroundColor3 = Color3.fromRGB(135, 206, 235) -- 天蓝色
+        btn.BackgroundTransparency = 0.5 -- 半透明度
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.SourceSansBold
+        btn.TextSize = 24
+        btn.AutoButtonColor = false
+        
+        -- 圆角设置
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 15)
+        corner.Parent = btn
+        
+        -- 白色微光描边
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = Color3.fromRGB(255, 255, 255)
+        stroke.Thickness = 1
+        stroke.Transparency = 0.3
+        stroke.Parent = btn
+
+        -- 绑定键盘信号引擎
+        local VIM = game:GetService("VirtualInputManager")
+        local isPressed = false
+        
+        local function pressDown()
+            if not isPressed then
+                isPressed = true
+                btn.BackgroundTransparency = 0.2 -- 按下时变不透明
+                -- 遍历触发所有绑定的按键
+                for _, key in ipairs(keycodes) do
+                    VIM:SendKeyEvent(true, key, false, game)
+                end
+            end
+        end
+        
+        local function pressUp()
+            if isPressed then
+                isPressed = false
+                btn.BackgroundTransparency = 0.5 -- 松开恢复半透明
+                for _, key in ipairs(keycodes) do
+                    VIM:SendKeyEvent(false, key, false, game)
+                end
+            end
+        end
+
+        -- 触屏/鼠标 按下与松开事件
+        btn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                pressDown()
+            end
+        end)
+        
+        btn.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                pressUp()
+            end
+        end)
+        
+        -- 防卡死容错
+        btn.MouseLeave:Connect(function()
+            pressUp()
+        end)
+        
+        return btn
+    end
+
+    -- 4. 按照 3x3 矩阵布局生成 8向 轮盘键
+    -- 基础四向 (上、下、左、右)
+    CreateDPadButton("BtnW", "W", UDim2.new(0, 55, 0, 0), {Enum.KeyCode.W})
+    CreateDPadButton("BtnS", "S", UDim2.new(0, 55, 0, 110), {Enum.KeyCode.S})
+    CreateDPadButton("BtnA", "A", UDim2.new(0, 0, 0, 55), {Enum.KeyCode.A})
+    CreateDPadButton("BtnD", "D", UDim2.new(0, 110, 0, 55), {Enum.KeyCode.D})
+
+    -- 斜向四个角 (采用箭头图标，同时发送两个按键指令)
+    CreateDPadButton("BtnWA", "↖", UDim2.new(0, 0, 0, 0), {Enum.KeyCode.W, Enum.KeyCode.A})     -- 左前
+    CreateDPadButton("BtnWD", "↗", UDim2.new(0, 110, 0, 0), {Enum.KeyCode.W, Enum.KeyCode.D})   -- 右前
+    CreateDPadButton("BtnSA", "↙", UDim2.new(0, 0, 0, 110), {Enum.KeyCode.S, Enum.KeyCode.A})   -- 左后
+    CreateDPadButton("BtnSD", "↘", UDim2.new(0, 110, 0, 110), {Enum.KeyCode.S, Enum.KeyCode.D}) -- 右后
+
+
+    -- ==========================================
+    -- UI 控件绑定
+    -- ==========================================
+    Tabs.Qwqa:AddToggle("QWQ_DPad_Toggle", {
+        Title = "开启 8向虚拟轮盘",
+        Description = "生成天蓝色半透明方向键，支持丝滑斜向走位",
+        Default = false,
+        Callback = function(state)
+            DPadGui.Enabled = state
+            
+            -- 关闭时，清空所有模拟按键，防止人物无限狂奔
+            if not state then
+                local VIM = game:GetService("VirtualInputManager")
+                VIM:SendKeyEvent(false, Enum.KeyCode.W, false, game)
+                VIM:SendKeyEvent(false, Enum.KeyCode.A, false, game)
+                VIM:SendKeyEvent(false, Enum.KeyCode.S, false, game)
+                VIM:SendKeyEvent(false, Enum.KeyCode.D, false, game)
+            end
+        end
+    })
+end
 
 
 
