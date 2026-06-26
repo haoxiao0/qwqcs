@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "3.3",
+    SubTitle = "5.5",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -18,7 +18,7 @@ local Tabs = {
     Qwqa = Window:AddTab({ Title = "功能", Icon = "rbxassetid://6558374856" }),
     Player = Window:AddTab({ Title = "人物", Icon = "rbxassetid://6558374856" }),
     ESP = Window:AddTab({ Title = "ESP", Icon = "rbxassetid://6558374856" }),
-    NPC_ESP = Window:AddTab({ Title = "NPC透视(Beta掉帧)", Icon = "rbxassetid://6558374856" }),
+    NPC_ESP = Window:AddTab({ Title = "NPC.EPS", Icon = "rbxassetid://6558374856" }),
     Aimbot = Window:AddTab({ Title = "自瞄", Icon = "rbxassetid://5205790785" }),
     Teleport = Window:AddTab({ Title = "传送", Icon = "rbxassetid://6558374856" }),
     FOV = Window:AddTab({ Title = "视角", Icon = "rbxassetid://6558374856" }),
@@ -403,6 +403,116 @@ Tabs.Qwqe:AddButton({
     end
 })
 -- ==========================================
+-- 下方为功能区
+-- ==========================================
+-- =============================================================================
+-- [UI 实例创建]
+-- =============================================================================
+local PerformanceGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+local FPSLabel = Instance.new("TextLabel")
+
+PerformanceGui.Name = "QWQ_Beautiful_HUD"
+PerformanceGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+PerformanceGui.ResetOnSpawn = false
+
+-- 面板靠右上角贴边，留出安全间距
+MainFrame.Parent = PerformanceGui
+MainFrame.BackgroundTransparency = 1
+MainFrame.Position = UDim2.new(1, -150, 0, 15)
+MainFrame.Size = UDim2.new(0, 135, 0, 30) -- 移除了Ping，高度由60缩减至30
+
+UIListLayout.Parent = MainFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+
+-- 统一的高级质感渲染函数
+local function configureLabel(label, order)
+    label.Size = UDim2.new(1, 0, 0, 24)
+    label.BackgroundTransparency = 0.25 -- 适度的半透明玻璃感
+    label.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- 深邃暗蓝底色
+    label.Font = Enum.Font.RobotoMono -- 极客感等宽字体
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.Visible = false
+    label.LayoutOrder = order
+    
+    -- 柔和外边框
+    local stroke = Instance.new("UIStroke", label)
+    stroke.Color = Color3.fromRGB(45, 45, 55)
+    stroke.Thickness = 1
+    
+    -- 圆角剪裁
+    local corners = Instance.new("UICorner", label)
+    corners.CornerRadius = UDim.new(0, 5)
+    
+    label.Parent = MainFrame
+end
+
+configureLabel(FPSLabel, 1)
+
+-- =============================================================================
+-- [动态刷新驱动] 每 0.2 秒高频刷新 FPS
+-- =============================================================================
+local fpsCount = 0
+local lastUpdateTime = os.clock()
+
+RunService.RenderStepped:Connect(function()
+    fpsCount = fpsCount + 1
+    local now = os.clock()
+    
+    -- 精确限制为每 0.2 秒刷新一次，保证实时性的同时防止 CPU 异常占用
+    if now - lastUpdateTime >= 0.2 then
+        
+        -- 计算并更新 FPS
+        local currentFps = math.floor(fpsCount / (now - lastUpdateTime))
+        FPSLabel.Text = "FPS: " .. currentFps
+        
+        -- 根据帧率健康度动态变色
+        if currentFps >= 55 then
+            FPSLabel.TextColor3 = Color3.fromRGB(90, 220, 140) -- 极佳：质感绿
+        elseif currentFps >= 35 then
+            FPSLabel.TextColor3 = Color3.fromRGB(240, 190, 90) -- 警告：温暖黄
+        else
+            FPSLabel.TextColor3 = Color3.fromRGB(240, 100, 100) -- 极差：警示红
+        end
+        
+        -- 重置计数器和时间
+        fpsCount = 0
+        lastUpdateTime = now
+    end
+end)
+
+-- =============================================================================
+-- [UI 开关控制对接]
+-- =============================================================================
+Tabs.Qwqa:AddSection("屏幕贴边数据显示")
+
+Tabs.Qwqa:AddToggle("ShowFPS_Toggle", { 
+    Title = "显示帧率 (FPS)", 
+    Description = "屏幕右上角显示实时FPS", 
+    Default = false, 
+    Callback = function(v) FPSLabel.Visible = v end 
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 local customFOVEnabled = false
@@ -448,6 +558,62 @@ Tabs.FOV:AddToggle("UnlimitedZoom", {
     end
 })
 
+
+
+
+
+
+-- ==========================================================
+-- 【UI构建】：强制第三人称视角功能
+-- ==========================================================
+if Tabs and Tabs.FOV then
+    Tabs.FOV:AddSection("视角破解")
+
+    -- 独立连接变量，防止内存泄漏
+    local QWQ_ThirdPerson_Connection = nil
+
+    Tabs.FOV:AddToggle("QWQ_ForceThirdPerson_Toggle", {
+        Title = "强制第三人称 (突破限制)",
+        Default = false,
+        Callback = function(QWQ_ThirdPerson_State)
+            if QWQ_ThirdPerson_State then
+                -- 1. 初始解锁：将相机模式改为经典模式，并放宽缩放限制
+                LocalPlayer.CameraMode = Enum.CameraMode.Classic
+                LocalPlayer.CameraMinZoomDistance = 5   -- 允许的最近距离
+                LocalPlayer.CameraMaxZoomDistance = 400 -- 允许的最远距离
+                
+                -- 2. 实时对抗：使用高频渲染循环，防止游戏本地脚本将视角再次锁死
+                QWQ_ThirdPerson_Connection = RunService.RenderStepped:Connect(function()
+                    -- 对抗相机模式锁定
+                    if LocalPlayer.CameraMode == Enum.CameraMode.LockFirstPerson then
+                        LocalPlayer.CameraMode = Enum.CameraMode.Classic
+                    end
+                    
+                    -- 对抗最大缩放距离锁定 (很多游戏会把MaxZoomDistance设为0.5来变相强制第一人称)
+                    if LocalPlayer.CameraMaxZoomDistance < 5 then
+                        LocalPlayer.CameraMaxZoomDistance = 400
+                    end
+                end)
+            else
+                -- 关闭功能：断开连接，停止强制覆盖
+                if QWQ_ThirdPerson_Connection then
+                    QWQ_ThirdPerson_Connection:Disconnect()
+                    QWQ_ThirdPerson_Connection = nil
+                end
+                
+                -- 可选：恢复默认缩放设置 (这里恢复为Roblox默认的128)
+                LocalPlayer.CameraMaxZoomDistance = 128
+            end
+        end
+    })
+end
+
+
+
+
+
+
+
 local faceLockConnection
 Tabs.FOV:AddToggle("FaceLock", {
     Title = "视角锁",
@@ -466,6 +632,15 @@ Tabs.FOV:AddToggle("FaceLock", {
         end
     end
 })
+
+
+
+
+
+
+
+
+
 
 LocalPlayer.CharacterAdded:Connect(function(character)
     character:WaitForChild("HumanoidRootPart")
@@ -1497,6 +1672,230 @@ local function createPlatform()
     platform.Parent = Workspace
 end
 
+
+
+-- ==========================================================
+-- 【UI构建】：极简轻量级 NPC 透视 (总开关/防卡顿版)
+-- ==========================================================
+if Tabs and Tabs.NPC_ESP then
+    Tabs.NPC_ESP:AddSection("NPC 透视总控")
+
+    local QWQ_NPCEspEnabled = false
+    local QWQ_RenderConnection = nil
+    local QWQ_EventConnections = {}
+    local NPC_Cache = {} -- 存储每个NPC的渲染实例
+
+    local QWQ_SafeContainer = Instance.new("Folder")
+    QWQ_SafeContainer.Name = "QWQ_NPC_ESP_Container"
+    QWQ_SafeContainer.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+
+    -- 1. 特征识别
+    local function IsValidNPC(model)
+        if not model or not model:IsA("Model") then return false end
+        if not model:FindFirstChild("HumanoidRootPart") then return false end
+        local hum = model:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return false end
+        if Players:GetPlayerFromCharacter(model) then return false end
+        return true
+    end
+
+    -- 2. 移除单个NPC的透视
+    local function RemoveNPC(npcModel)
+        if NPC_Cache[npcModel] then
+            local data = NPC_Cache[npcModel]
+            if data.Highlight then data.Highlight:Destroy() end
+            if data.NameText then data.NameText:Remove() end
+            if data.DistText then data.DistText:Remove() end
+            NPC_Cache[npcModel] = nil
+        end
+    end
+
+    -- 3. 添加单个NPC的透视实例
+    local function AddNPC(npcModel)
+        if NPC_Cache[npcModel] then return end
+
+        local data = {}
+
+        -- 高亮
+        local highlight = Instance.new("Highlight")
+        highlight.Name = npcModel.Name .. "_ESP"
+        highlight.FillTransparency = 0.5
+        highlight.OutlineTransparency = 0.1
+        highlight.Adornee = npcModel
+        highlight.Parent = QWQ_SafeContainer
+        highlight.Enabled = false
+        data.Highlight = highlight
+
+        -- 名称绘制
+        local nameText = Drawing.new("Text")
+        nameText.Size = 16
+        nameText.Center = true
+        nameText.Outline = true
+        nameText.Visible = false
+        data.NameText = nameText
+
+        -- 距离绘制
+        local distText = Drawing.new("Text")
+        distText.Size = 14
+        distText.Center = true
+        distText.Outline = true
+        distText.Visible = false
+        data.DistText = distText
+
+        NPC_Cache[npcModel] = data
+
+        -- 绑定销毁事件释放内存
+        local deathConn
+        deathConn = npcModel.AncestryChanged:Connect(function(_, parent)
+            if not parent then
+                RemoveNPC(npcModel)
+                if deathConn then deathConn:Disconnect() end
+            end
+        end)
+        
+        local hum = npcModel:FindFirstChildOfClass("Humanoid")
+        if hum then
+            local healthConn
+            healthConn = hum.Died:Connect(function()
+                RemoveNPC(npcModel)
+                if healthConn then healthConn:Disconnect() end
+            end)
+        end
+    end
+
+    -- 4. 彻底清理与停止运算
+    local function StopAndClearAll()
+        -- 停止高频渲染循环
+        if QWQ_RenderConnection then
+            QWQ_RenderConnection:Disconnect()
+            QWQ_RenderConnection = nil
+        end
+        -- 断开事件监听
+        for _, conn in ipairs(QWQ_EventConnections) do
+            conn:Disconnect()
+        end
+        table.clear(QWQ_EventConnections)
+        -- 清理所有绘制缓存
+        for npcModel, _ in pairs(NPC_Cache) do
+            RemoveNPC(npcModel)
+        end
+        table.clear(NPC_Cache)
+    end
+
+    -- 5. 渲染循环函数 (仅在开启时运作)
+    local function RenderLoop()
+        local localHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        
+        for npcModel, data in pairs(NPC_Cache) do
+            local hrp = npcModel:FindFirstChild("HumanoidRootPart")
+            local hum = npcModel:FindFirstChildOfClass("Humanoid")
+            
+            -- 安全校验
+            if hrp and hum and hum.Health > 0 then
+                local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                
+                -- 高亮处理
+                if data.Highlight then
+                    data.Highlight.Enabled = Options.NPC_HighlightToggle.Value
+                    if data.Highlight.Enabled then
+                        data.Highlight.FillColor = Options.NPC_HighlightColor.Value
+                        data.Highlight.OutlineColor = Options.NPC_HighlightColor.Value
+                    end
+                end
+
+                if onScreen then
+                    local sizeY = (Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3, 0)).Y) * 0.75
+                    
+                    -- 名称处理
+                    if data.NameText then
+                        if Options.NPC_NameToggle.Value then
+                            data.NameText.Text = npcModel.Name
+                            data.NameText.Position = Vector2.new(vector.X, vector.Y - sizeY - 20)
+                            data.NameText.Color = Options.NPC_TextColor.Value
+                            data.NameText.Visible = true
+                        else
+                            data.NameText.Visible = false
+                        end
+                    end
+
+                    -- 距离处理
+                    if data.DistText then
+                        if Options.NPC_DistToggle.Value and localHrp then
+                            local distance = math.floor((hrp.Position - localHrp.Position).Magnitude)
+                            data.DistText.Text = distance .. " 米"
+                            data.DistText.Position = Vector2.new(vector.X, vector.Y + sizeY + 5)
+                            data.DistText.Color = Options.NPC_TextColor.Value
+                            data.DistText.Visible = true
+                        else
+                            data.DistText.Visible = false
+                        end
+                    end
+                else
+                    if data.NameText then data.NameText.Visible = false end
+                    if data.DistText then data.DistText.Visible = false end
+                end
+            else
+                if data.NameText then data.NameText.Visible = false end
+                if data.DistText then data.DistText.Visible = false end
+            end
+        end
+    end
+
+    -- 6. UI 控制面板
+    Tabs.NPC_ESP:AddToggle("QWQ_NPC_MasterToggle", {
+        Title = "总开关 (NPC透视)",
+        Description = "关闭后自动停止所有运算并清除画面",
+        Default = false,
+        Callback = function(state)
+            QWQ_NPCEspEnabled = state
+            if state then
+                -- 开启渲染循环
+                QWQ_RenderConnection = RunService.RenderStepped:Connect(RenderLoop)
+
+                -- 监听新生成的NPC
+                table.insert(QWQ_EventConnections, workspace.DescendantAdded:Connect(function(descendant)
+                    if not QWQ_NPCEspEnabled then return end
+                    if descendant:IsA("Humanoid") then
+                        task.delay(0.5, function()
+                            local parentModel = descendant.Parent
+                            if parentModel and IsValidNPC(parentModel) then
+                                AddNPC(parentModel)
+                            end
+                        end)
+                    end
+                end))
+
+                -- 初始扫描 (采用分步延时，防卡死)
+                task.spawn(function()
+                    local descendants = workspace:GetDescendants()
+                    for i, obj in ipairs(descendants) do
+                        if not QWQ_NPCEspEnabled then break end
+                        if obj:IsA("Model") and IsValidNPC(obj) then
+                            AddNPC(obj)
+                        end
+                        if i % 300 == 0 then task.wait() end
+                    end
+                end)
+            else
+                StopAndClearAll()
+            end
+        end
+    })
+
+    Tabs.NPC_ESP:AddSection("渲染设置")
+
+    -- 统一调色文本 (名称和距离)
+    Tabs.NPC_ESP:AddToggle("NPC_NameToggle", { Title = "显示名称", Default = false, Callback = function(v) Options.NPC_NameToggle.Value = v end })
+    Tabs.NPC_ESP:AddToggle("NPC_DistToggle", { Title = "显示距离", Default = false, Callback = function(v) Options.NPC_DistToggle.Value = v end })
+    Tabs.NPC_ESP:AddColorpicker("NPC_TextColor", { Title = "名称/距离 颜色", Default = Color3.fromRGB(255, 255, 255), Callback = function(v) Options.NPC_TextColor.Value = v end })
+    
+    -- 单独调色高亮
+    Tabs.NPC_ESP:AddToggle("NPC_HighlightToggle", { Title = "显示高亮", Default = false, Callback = function(v) Options.NPC_HighlightToggle.Value = v end })
+    Tabs.NPC_ESP:AddColorpicker("NPC_HighlightColor", { Title = "高亮颜色", Default = Color3.fromRGB(255, 85, 0), Callback = function(v) Options.NPC_HighlightColor.Value = v end })
+end
+
+
+
 do
 Tabs.World:AddToggle("SelfGlow", {
     Title = "自身发光",
@@ -1926,9 +2325,112 @@ Tabs.Player:AddToggle("AutoJump", {
         end
     end
 })
+-- ===============================================
+-- 自动旋转
+-- ===============================================
+-- 带有独一无二 QWQ_SpinBot_ 前缀的全局隔离级变量
+local QWQ_SpinBot_GlobalState_IsActive = false
+local QWQ_SpinBot_GlobalState_RotationSpeed = 20
+local QWQ_SpinBot_System_RenderStepConnection = nil
+local QWQ_SpinBot_System_CharacterAddedConnection = nil -- 替换为角色重生监听连接
+
+-- 独一无二的终止清理函数（只清理底层的连接，不影响 UI 开关状态）
+local function QWQ_SpinBot_CoreFunction_TerminateSpinning()
+    -- 强行熔断渲染层连接，确保 0 条垃圾代码驻留 CPU
+    if QWQ_SpinBot_System_RenderStepConnection then
+        QWQ_SpinBot_System_RenderStepConnection:Disconnect()
+        QWQ_SpinBot_System_RenderStepConnection = nil
+    end
+end
+
+-- 彻底关闭整个系统的函数（当手动关闭 UI 开关时调用）
+local function QWQ_SpinBot_CoreFunction_DisableEntirely()
+    QWQ_SpinBot_GlobalState_IsActive = false
+    QWQ_SpinBot_CoreFunction_TerminateSpinning()
+    
+    -- 断开重生监听
+    if QWQ_SpinBot_System_CharacterAddedConnection then
+        QWQ_SpinBot_System_CharacterAddedConnection:Disconnect()
+        QWQ_SpinBot_System_CharacterAddedConnection = nil
+    end
+end
+
+-- 独一无二的启动驱动函数
+local function QWQ_SpinBot_CoreFunction_InitializeSpinning()
+    QWQ_SpinBot_CoreFunction_TerminateSpinning() -- 前置清洗渲染连接，防止多次叠加物理层
+    
+    -- 极速自适应物理心跳循环
+    QWQ_SpinBot_System_RenderStepConnection = RunService.RenderStepped:Connect(function(QWQ_SpinBot_Runtime_DeltaTime)
+        if not QWQ_SpinBot_GlobalState_IsActive then return end
+        
+        local QWQ_SpinBot_Loop_Char = LocalPlayer.Character
+        if not QWQ_SpinBot_Loop_Char then return end
+        
+        local QWQ_SpinBot_Loop_Hrp = QWQ_SpinBot_Loop_Char:FindFirstChild("HumanoidRootPart")
+        local QWQ_SpinBot_Loop_Hum = QWQ_SpinBot_Loop_Char:FindFirstChild("Humanoid")
+        
+        -- 严格多重边界判定，防止对假死、无碰撞箱或换模组时的人物实体进行非法坐标运算
+        if QWQ_SpinBot_Loop_Hrp and QWQ_SpinBot_Loop_Hum and QWQ_SpinBot_Loop_Hum.Health > 0 then
+            QWQ_SpinBot_Loop_Hrp.CFrame = QWQ_SpinBot_Loop_Hrp.CFrame * CFrame.Angles(0, math.rad(QWQ_SpinBot_GlobalState_RotationSpeed * QWQ_SpinBot_Runtime_DeltaTime * 60), 0)
+        end
+    end)
+end
+
+-- 开启监听与注册函数
+local function QWQ_SpinBot_CoreFunction_StartSystem()
+    QWQ_SpinBot_CoreFunction_DisableEntirely() -- 全面初始化清洗
+    QWQ_SpinBot_GlobalState_IsActive = true
+    
+    -- 1. 针对当前已经存在的角色立即初始化一次
+    if LocalPlayer.Character then
+        QWQ_SpinBot_CoreFunction_InitializeSpinning()
+    end
+    
+    -- 2. 核心：监听重生。只要玩家复活，就会自动重新挂载旋转逻辑，不再关闭 UI 开关
+    QWQ_SpinBot_System_CharacterAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+        -- 稍微等待 Humanoid 加载，确保物理层完全就绪
+        newCharacter:WaitForChild("Humanoid", 5)
+        if QWQ_SpinBot_GlobalState_IsActive then
+            QWQ_SpinBot_CoreFunction_InitializeSpinning()
+        end
+    end)
+end
+
+-- ==========================================================
+-- 【UI构建】：防冲突独立索引化界面绑定
+-- ==========================================================
+if Tabs and Tabs.Player then
+    Tabs.Player:AddSection("玩家旋转")
+
+    -- 内部索引键（Key）全部更改为独一无二的名称，彻底断绝全局UI库的命名冲突
+    Tabs.Player:AddToggle("QWQ_SpinBot_UniqueKey_Toggle", {
+        Title = "开启玩家旋转",
+        Default = false,
+        Callback = function(QWQ_SpinBot_UI_ToggleState)
+            if QWQ_SpinBot_UI_ToggleState then
+                QWQ_SpinBot_CoreFunction_StartSystem()
+            else
+                QWQ_SpinBot_CoreFunction_DisableEntirely()
+            end
+        end
+    })
+
+    Tabs.Player:AddSlider("QWQ_SpinBot_UniqueKey_SpeedSlider", {
+        Title = "旋转速度",
+        Min = 10,
+        Max = 4000, -- 极限陀螺转速
+        Default = 20,
+        Rounding = 0,
+        Callback = function(QWQ_SpinBot_UI_SliderState)
+            QWQ_SpinBot_GlobalState_RotationSpeed = QWQ_SpinBot_UI_SliderState
+        end
+    })
+end
+
+
+
 
 -- ==========================================
--- 拼接到原有脚本的 Tabs.Player 栏目中
 -- ==========================================
 Tabs.Player:AddSection("特殊动作机制 (穿墙)")
 
@@ -2409,6 +2911,270 @@ Tabs.Aimbot:AddToggle("SingleAimbotEnabled", {
     end
 })
 
+
+-- ==========================================================
+-- 【零掉帧引擎】：NPC 专属自动瞄准 (完全复刻玩家自瞄完美逻辑)
+-- ==========================================================
+if Tabs and Tabs.Aimbot then
+    Tabs.Aimbot:AddSection("🤖 挂机特化：NPC 自瞄引擎")
+
+    local NPC_Aimbot_Enabled = false
+    local NPC_Aimbot_TargetPart = "HumanoidRootPart"
+    local NPC_Aimbot_Smoothness = 0.4
+    local NPC_Aimbot_Radius = 150
+    local NPC_Aimbot_WallCheck = true
+    local NPC_Aimbot_FOVColor = Color3.fromRGB(255, 170, 0)
+    local NPC_Aimbot_RainbowFOV = false
+    
+    local NPC_Cache = {}
+    local NPC_Connections = {}
+    local NPC_RenderConnection = nil
+
+    -- 采用与你玩家自瞄完全一致的 UI Frame 绘制 FOV (告别 Drawing 偏差)
+    local ScreenGui_NPC = game:GetService("CoreGui"):FindFirstChild("QWQ_NPC_Aimbot_GUI") or Instance.new("ScreenGui")
+    ScreenGui_NPC.Name = "QWQ_NPC_Aimbot_GUI"
+    ScreenGui_NPC.Parent = game:GetService("CoreGui")
+    ScreenGui_NPC.IgnoreGuiInset = true
+    ScreenGui_NPC.ResetOnSpawn = false
+
+    local NPC_FOVCircle = Instance.new("Frame")
+    NPC_FOVCircle.Name = "NPC_AimbotFOV"
+    NPC_FOVCircle.Parent = ScreenGui_NPC
+    NPC_FOVCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+    NPC_FOVCircle.Position = UDim2.new(0.5, 0, 0.5, 0)
+    NPC_FOVCircle.Size = UDim2.new(0, NPC_Aimbot_Radius * 2, 0, NPC_Aimbot_Radius * 2)
+    NPC_FOVCircle.BackgroundTransparency = 1
+    NPC_FOVCircle.Visible = false
+
+    local NPC_UIStroke = Instance.new("UIStroke", NPC_FOVCircle)
+    NPC_UIStroke.Thickness = 2
+    NPC_UIStroke.Color = NPC_Aimbot_FOVColor
+
+    local NPC_UICorner = Instance.new("UICorner", NPC_FOVCircle)
+    NPC_UICorner.CornerRadius = UDim.new(1, 0)
+
+    -- 1. 特征识别器
+    local function IsValidNPC(model)
+        if not model or not model:IsA("Model") then return false end
+        if not model:FindFirstChild("HumanoidRootPart") then return false end
+        local hum = model:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return false end
+        if Players:GetPlayerFromCharacter(model) then return false end
+        return true
+    end
+
+    -- 2. 缓存管理
+    local function AddNPCToCache(npcModel)
+        if NPC_Cache[npcModel] then return end
+        NPC_Cache[npcModel] = true
+
+        local deathConn
+        deathConn = npcModel.AncestryChanged:Connect(function(_, parent)
+            if not parent then
+                NPC_Cache[npcModel] = nil
+                if deathConn then deathConn:Disconnect() end
+            end
+        end)
+        
+        local hum = npcModel:FindFirstChildOfClass("Humanoid")
+        if hum then
+            local healthConn
+            healthConn = hum.Died:Connect(function()
+                NPC_Cache[npcModel] = nil
+                if healthConn then healthConn:Disconnect() end
+            end)
+        end
+    end
+
+    -- 3. 智能剪枝初次扫描
+    local function ScanForNPCs(parent)
+        if not NPC_Aimbot_Enabled or not parent then return end
+        for _, child in ipairs(parent:GetChildren()) do
+            if not NPC_Aimbot_Enabled then break end
+            
+            if child:IsA("BasePart") or child:IsA("Script") or child:IsA("Terrain") then continue end
+            
+            if child:IsA("Model") then
+                if IsValidNPC(child) then
+                    AddNPCToCache(child)
+                else
+                    task.defer(ScanForNPCs, child)
+                end
+            elseif child:IsA("Folder") then
+                task.defer(ScanForNPCs, child)
+            end
+        end
+    end
+
+    -- 4. 获取最接近屏幕中心的 NPC (完全复刻你原脚本的逻辑与算式)
+    local function GetClosestNPC()
+        local closestTargetPart = nil
+        local shortestDist = NPC_Aimbot_Radius
+
+        for npcModel, _ in pairs(NPC_Cache) do
+            local hum = npcModel:FindFirstChildOfClass("Humanoid")
+            local hrp = npcModel:FindFirstChild("HumanoidRootPart")
+            
+            -- 智能回退：如果指定的部位找不到，默认保底锁身体
+            local targetPart = npcModel:FindFirstChild(NPC_Aimbot_TargetPart) or hrp
+
+            if targetPart and hum and hum.Health > 0 and hrp then
+                local pos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                if onScreen then
+                    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                    local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+
+                    if dist <= shortestDist then
+                        if NPC_Aimbot_WallCheck then
+                            local origin = Camera.CFrame.Position
+                            -- 采用你脚本里的 Unit * 500 的射线检测方式
+                            local direction = (targetPart.Position - origin).Unit * 500
+                            local raycastParams = RaycastParams.new()
+                            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character or {}}
+                            raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+                            local result = workspace:Raycast(origin, direction, raycastParams)
+                            if result and result.Instance:IsDescendantOf(npcModel) then
+                                closestTargetPart = targetPart
+                                shortestDist = dist
+                            end
+                        else
+                            closestTargetPart = targetPart
+                            shortestDist = dist
+                        end
+                    end
+                end
+            else
+                if not hrp or (hum and hum.Health <= 0) then
+                    NPC_Cache[npcModel] = nil
+                end
+            end
+        end
+        return closestTargetPart
+    end
+
+    -- 5. 清理引擎
+    local function StopNPCAimbot()
+        if NPC_RenderConnection then
+            NPC_RenderConnection:Disconnect()
+            NPC_RenderConnection = nil
+        end
+        for _, conn in ipairs(NPC_Connections) do
+            conn:Disconnect()
+        end
+        table.clear(NPC_Connections)
+        table.clear(NPC_Cache)
+        NPC_FOVCircle.Visible = false -- 关闭时隐藏 FOV 圈
+    end
+
+    -- 6. 高频渲染循环
+    local function NPCAimbotLoop()
+        -- 你的彩虹圈逻辑完美平移
+        if NPC_Aimbot_RainbowFOV then
+            local hue = tick() % 5 / 5
+            NPC_UIStroke.Color = Color3.fromHSV(hue, 1, 1)
+        elseif NPC_UIStroke.Color ~= NPC_Aimbot_FOVColor then
+            NPC_UIStroke.Color = NPC_Aimbot_FOVColor
+        end
+
+        local targetPart = GetClosestNPC()
+        if targetPart then
+            local targetPos = targetPart.Position
+            local newCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+            Camera.CFrame = Camera.CFrame:Lerp(newCFrame, NPC_Aimbot_Smoothness)
+        end
+    end
+
+    -- ==========================================
+    -- UI 控件绑定
+    -- ==========================================
+    Tabs.Aimbot:AddToggle("NPC_Aimbot_Toggle", {
+        Title = "开启 NPC 自瞄",
+        Description = "开启后自动显示 FOV 圈",
+        Default = false,
+        Callback = function(state)
+            NPC_Aimbot_Enabled = state
+            NPC_FOVCircle.Visible = state -- FOV 开关直接与此绑定
+            
+            if state then
+                if Options.GlobalAimbotEnabled and Options.GlobalAimbotEnabled.Value then
+                    Options.GlobalAimbotEnabled:SetValue(false)
+                    Fluent:Notify({Title = "提示", Content = "已自动关闭玩家自瞄，防止冲突", Duration = 3})
+                end
+
+                table.insert(NPC_Connections, workspace.DescendantAdded:Connect(function(descendant)
+                    if not NPC_Aimbot_Enabled then return end
+                    if descendant:IsA("Humanoid") then
+                        task.delay(0.5, function()
+                            local parentModel = descendant.Parent
+                            if parentModel and IsValidNPC(parentModel) then
+                                AddNPCToCache(parentModel)
+                            end
+                        end)
+                    end
+                end))
+
+                task.spawn(function() ScanForNPCs(workspace) end)
+                NPC_RenderConnection = RunService.RenderStepped:Connect(NPCAimbotLoop)
+            else
+                StopNPCAimbot()
+            end
+        end
+    })
+
+    Tabs.Aimbot:AddToggle("NPC_Aimbot_WallCheck", {
+        Title = "NPC 墙壁检查",
+        Default = true,
+        Callback = function(state) NPC_Aimbot_WallCheck = state end
+    })
+
+    Tabs.Aimbot:AddSlider("NPC_Aimbot_Radius", {
+        Title = "NPC FOV 范围",
+        Min = 50,
+        Max = 500,
+        Default = 150,
+        Rounding = 1,
+        Callback = function(value) 
+            NPC_Aimbot_Radius = value 
+            NPC_FOVCircle.Size = UDim2.new(0, value * 2, 0, value * 2)
+        end
+    })
+
+    Tabs.Aimbot:AddSlider("NPC_Aimbot_Smoothness", {
+        Title = "NPC 自瞄平滑度",
+        Min = 0.05,
+        Max = 1,
+        Default = 0.4,
+        Rounding = 2,
+        Callback = function(value) NPC_Aimbot_Smoothness = value end
+    })
+
+    Tabs.Aimbot:AddToggle("NPC_Aimbot_RainbowFOV", {
+        Title = "NPC FOV 彩虹模式",
+        Default = false,
+        Callback = function(value) NPC_Aimbot_RainbowFOV = value end
+    })
+
+    Tabs.Aimbot:AddColorpicker("NPC_Aimbot_FOVColor", {
+        Title = "NPC FOV 颜色",
+        Default = Color3.fromRGB(255, 170, 0),
+        Callback = function(value)
+            NPC_Aimbot_FOVColor = value
+            if not NPC_Aimbot_RainbowFOV then
+                NPC_UIStroke.Color = value
+            end
+        end
+    })
+
+    Tabs.Aimbot:AddDropdown("NPC_Aimbot_TargetPart", {
+        Title = "锁定部位 (找不到将默认锁身体)",
+        Values = {"HumanoidRootPart", "Head"},
+        Default = 1,
+        Callback = function(value) NPC_Aimbot_TargetPart = value end
+    })
+end
+
+
+-- 碰撞箱函数
 local function setupHitbox(player)
     if player == LocalPlayer then return end
     if hitboxTeamCheck and player.Team == LocalPlayer.Team then return end
@@ -3188,412 +3954,9 @@ Tabs.Main:AddToggle("AutoTouch_Toggle", {
 
 
 
--- =============================================================================
--- [UI 实例创建]
--- =============================================================================
-local PerformanceGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local UIListLayout = Instance.new("UIListLayout")
-local FPSLabel = Instance.new("TextLabel")
-
-PerformanceGui.Name = "QWQ_Beautiful_HUD"
-PerformanceGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-PerformanceGui.ResetOnSpawn = false
-
--- 面板靠右上角贴边，留出安全间距
-MainFrame.Parent = PerformanceGui
-MainFrame.BackgroundTransparency = 1
-MainFrame.Position = UDim2.new(1, -150, 0, 15)
-MainFrame.Size = UDim2.new(0, 135, 0, 30) -- 移除了Ping，高度由60缩减至30
-
-UIListLayout.Parent = MainFrame
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 5)
-
--- 统一的高级质感渲染函数
-local function configureLabel(label, order)
-    label.Size = UDim2.new(1, 0, 0, 24)
-    label.BackgroundTransparency = 0.25 -- 适度的半透明玻璃感
-    label.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- 深邃暗蓝底色
-    label.Font = Enum.Font.RobotoMono -- 极客感等宽字体
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Center
-    label.Visible = false
-    label.LayoutOrder = order
-    
-    -- 柔和外边框
-    local stroke = Instance.new("UIStroke", label)
-    stroke.Color = Color3.fromRGB(45, 45, 55)
-    stroke.Thickness = 1
-    
-    -- 圆角剪裁
-    local corners = Instance.new("UICorner", label)
-    corners.CornerRadius = UDim.new(0, 5)
-    
-    label.Parent = MainFrame
-end
-
-configureLabel(FPSLabel, 1)
-
--- =============================================================================
--- [动态刷新驱动] 每 0.2 秒高频刷新 FPS
--- =============================================================================
-local fpsCount = 0
-local lastUpdateTime = os.clock()
-
-RunService.RenderStepped:Connect(function()
-    fpsCount = fpsCount + 1
-    local now = os.clock()
-    
-    -- 精确限制为每 0.2 秒刷新一次，保证实时性的同时防止 CPU 异常占用
-    if now - lastUpdateTime >= 0.2 then
-        
-        -- 计算并更新 FPS
-        local currentFps = math.floor(fpsCount / (now - lastUpdateTime))
-        FPSLabel.Text = "FPS: " .. currentFps
-        
-        -- 根据帧率健康度动态变色
-        if currentFps >= 55 then
-            FPSLabel.TextColor3 = Color3.fromRGB(90, 220, 140) -- 极佳：质感绿
-        elseif currentFps >= 35 then
-            FPSLabel.TextColor3 = Color3.fromRGB(240, 190, 90) -- 警告：温暖黄
-        else
-            FPSLabel.TextColor3 = Color3.fromRGB(240, 100, 100) -- 极差：警示红
-        end
-        
-        -- 重置计数器和时间
-        fpsCount = 0
-        lastUpdateTime = now
-    end
-end)
-
--- =============================================================================
--- [UI 开关控制对接]
--- =============================================================================
-Tabs.Qwqa:AddSection("屏幕贴边数据显示")
-
-Tabs.Qwqa:AddToggle("ShowFPS_Toggle", { 
-    Title = "显示帧率 (FPS)", 
-    Description = "屏幕右上角显示实时FPS", 
-    Default = false, 
-    Callback = function(v) FPSLabel.Visible = v end 
-})
-
 
 
 --👍👍👍👍👍👍👍👍👍😈😈😈😈😈
 
 
 
-
--- =============================================================================
--- [NPC 独立透视渲染管道与缓存] -> 已完全隔离命名冲突，变量名重构为 NpcDrawData
--- =============================================================================
-local NpcEspMasterSwitch = false -- 总开关状态变量
-local NpcDrawData = { Boxes = {}, Rays = {}, Highlights = {}, HealthBars = {}, Names = {}, Distances = {}, Coords = {} }
-local NpcCache = {} 
-local CurrentScanRoot = workspace 
-
-local function cleanupESP(key)
-    if NpcDrawData.Boxes[key] then NpcDrawData.Boxes[key]:Remove() NpcDrawData.Boxes[key] = nil end
-    if NpcDrawData.Rays[key] then NpcDrawData.Rays[key]:Remove() NpcDrawData.Rays[key] = nil end
-    if NpcDrawData.Highlights[key] then pcall(function() NpcDrawData.Highlights[key]:Destroy() end) NpcDrawData.Highlights[key] = nil end
-    if NpcDrawData.HealthBars[key] then
-        if NpcDrawData.HealthBars[key].Bar then NpcDrawData.HealthBars[key].Bar:Remove() end
-        if NpcDrawData.HealthBars[key].Background then NpcDrawData.HealthBars[key].Background:Remove() end
-        if NpcDrawData.HealthBars[key].Percentage then NpcDrawData.HealthBars[key].Percentage:Remove() end
-        NpcDrawData.HealthBars[key] = nil
-    end
-    if NpcDrawData.Names[key] then NpcDrawData.Names[key]:Remove() NpcDrawData.Names[key] = nil end
-    if NpcDrawData.Distances[key] then NpcDrawData.Distances[key]:Remove() NpcDrawData.Distances[key] = nil end
-    if NpcDrawData.Coords[key] then NpcDrawData.Coords[key]:Remove() NpcDrawData.Coords[key] = nil end
-end
-
--- 全局强制清除函数：关闭总开关时切断所有渲染并清空变量缓存
-local function clearAllNpcEspData()
-    -- 清除所有当前的 Drawing 实例和 Instance 高亮
-    for key, _ in pairs(NpcDrawData.Boxes) do cleanupESP(key) end
-    for key, _ in pairs(NpcCache) do cleanupESP(key) end
-    
-    -- 强制格式化所有内部缓存表，彻底释放内存
-    NpcCache = {}
-    NpcDrawData = { Boxes = {}, Rays = {}, Highlights = {}, HealthBars = {}, Names = {}, Distances = {}, Coords = {} }
-end
-
-local function createDrawingObjects(key, parentCharacter)
-    if not NpcEspMasterSwitch then return end -- 总开关关闭时拒绝创建
-    if not key or not parentCharacter then return end
-    if not parentCharacter:FindFirstChild("HumanoidRootPart") or not parentCharacter:FindFirstChildOfClass("Humanoid") then return end
-
-    if not NpcDrawData.Boxes[key] then local b = Drawing.new("Square") b.Thickness = 1.5; b.Filled = false; NpcDrawData.Boxes[key] = b end
-    if not NpcDrawData.Rays[key] then local r = Drawing.new("Line") r.Thickness = 1; NpcDrawData.Rays[key] = r end
-    
-    if not NpcDrawData.Highlights[key] then
-        local success, h = pcall(function()
-            local newHl = Instance.new("Highlight")
-            newHl.Name = "QWQ_NPC_HL"
-            newHl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop 
-            newHl.FillTransparency = 0.5
-            newHl.OutlineTransparency = 0
-            newHl.Adornee = parentCharacter
-            newHl.Parent = parentCharacter
-            return newHl
-        end)
-        if success then NpcDrawData.Highlights[key] = h end
-    end
-    
-    if not NpcDrawData.HealthBars[key] then
-        local hb = { Bar = Drawing.new("Square"), Background = Drawing.new("Square"), Percentage = Drawing.new("Text") }
-        hb.Bar.Filled = true; hb.Background.Filled = true; hb.Background.Color = Color3.fromRGB(40,40,40)
-        hb.Percentage.Size = 14; hb.Percentage.Center = true; hb.Percentage.Outline = true; NpcDrawData.HealthBars[key] = hb
-    end
-    if not NpcDrawData.Names[key] then local n = Drawing.new("Text") n.Size = 14; n.Center = true; n.Outline = true; NpcDrawData.Names[key] = n end
-    if not NpcDrawData.Distances[key] then local d = Drawing.new("Text") d.Size = 13; d.Center = true; d.Outline = true; NpcDrawData.Distances[key] = d end
-    if not NpcDrawData.Coords[key] then local c = Drawing.new("Text") c.Size = 12; c.Center = true; c.Outline = true; NpcDrawData.Coords[key] = c end
-end
-
--- =============================================================================
--- [异步扫描任务]
--- =============================================================================
-task.spawn(function()
-    while true do
-        if NpcEspMasterSwitch then
-            local newCache = {}
-            local root = CurrentScanRoot or workspace
-            
-            local success, err = pcall(function()
-                for _, obj in ipairs(root:GetDescendants()) do
-                    if not NpcEspMasterSwitch then break end -- 扫描途中如果开关被关闭则立刻终止
-                    if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") and obj ~= LocalPlayer.Character then
-                        if not Players:GetPlayerFromCharacter(obj) then
-                            newCache[obj] = { character = obj, name = "[NPC] " .. obj.Name }
-                        end
-                    end
-                end
-            end)
-
-            if success and NpcEspMasterSwitch then NpcCache = newCache end
-        end
-        task.wait(1.5) 
-    end
-end)
-
--- =============================================================================
--- [每帧渲染更新]
--- =============================================================================
-local function updateESP()
-    if not NpcEspMasterSwitch then return end -- 总开关关闭时立马禁止后续任何检测与渲染逻辑
-
-    for key, data in pairs(NpcCache) do 
-        if key.Parent then createDrawingObjects(key, data.character) end 
-    end
-
-    local cam = Camera
-    local viewportSize = cam.ViewportSize
-    local localCharacter = LocalPlayer.Character
-    local localHrp = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart")
-    
-    local optBox = Options.Npc_Box and Options.Npc_Box.Value
-    local optBoxColor = Options.Npc_BoxColor and Options.Npc_BoxColor.Value
-    local optRay = Options.Npc_Ray and Options.Npc_Ray.Value
-    local optRayColor = Options.Npc_RayColor and Options.Npc_RayColor.Value
-    local optHighlight = Options.Npc_Highlight and Options.Npc_Highlight.Value
-    local optHighlightColor = Options.Npc_HighlightColor and Options.Npc_HighlightColor.Value
-    local optHealth = Options.Npc_Health and Options.Npc_Health.Value
-    local optHealthColor = Options.Npc_HealthColor and Options.Npc_HealthColor.Value
-    local optName = Options.Npc_Name and Options.Npc_Name.Value
-    local optNameColor = Options.Npc_NameColor and Options.Npc_NameColor.Value
-    local optDistance = Options.Npc_Distance and Options.Npc_Distance.Value
-    local optCoords = Options.Npc_Coords and Options.Npc_Coords.Value
-
-    for key, data in pairs(NpcCache) do
-        local char = data.character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-
-        if hrp and hum and char.Parent then
-            local hrpPos = hrp.Position
-            local vector, onScreen = cam:WorldToViewportPoint(hrpPos)
-            
-            if onScreen then
-                local topY, bottomY, height
-                if optBox or optHealth then
-                    topY = cam:WorldToViewportPoint(hrpPos + Vector3.new(0, 3, 0)).Y
-                    bottomY = cam:WorldToViewportPoint(hrpPos - Vector3.new(0, 3, 0)).Y
-                    height = (bottomY - topY) * 0.75
-                end
-
-                -- [方框]
-                local box = NpcDrawData.Boxes[key]
-                if box then
-                    if optBox and height then
-                        box.Size = Vector2.new(height * 1.5, height * 2)
-                        box.Position = Vector2.new(vector.X - box.Size.X / 2, vector.Y - box.Size.Y / 2)
-                        box.Color = optBoxColor
-                        box.Visible = true
-                    else box.Visible = false end
-                end
-
-                -- [射线]
-                local ray = NpcDrawData.Rays[key]
-                if ray then
-                    if optRay then
-                        ray.From = Vector2.new(viewportSize.X / 2, viewportSize.Y)
-                        ray.To = Vector2.new(vector.X, vector.Y)
-                        ray.Color = optRayColor
-                        ray.Visible = true
-                    else ray.Visible = false end
-                end
-
-                -- [高亮发光]
-                local hl = NpcDrawData.Highlights[key]
-                if hl then
-                    if optHighlight then
-                        hl.FillColor = optHighlightColor
-                        hl.OutlineColor = optHighlightColor
-                        hl.Enabled = true
-                    else hl.Enabled = false end
-                end
-
-                -- [血条]
-                local healthBar = NpcDrawData.HealthBars[key]
-                if healthBar then
-                    if optHealth and height then
-                        healthBar.Background.Size = Vector2.new(4, height)
-                        healthBar.Background.Position = Vector2.new(vector.X - (height * 0.75) - 7, vector.Y - height / 2)
-                        healthBar.Background.Visible = true
-                        
-                        local healthPercent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
-                        healthBar.Bar.Size = Vector2.new(4, height * healthPercent)
-                        healthBar.Bar.Position = Vector2.new(vector.X - (height * 0.75) - 7, (vector.Y + height / 2) - (height * healthPercent))
-                        healthBar.Bar.Color = optHealthColor
-                        healthBar.Bar.Visible = true
-                        
-                        local pctText = math.floor(healthPercent * 100) .. "%"
-                        if healthBar.Percentage.Text ~= pctText then
-                            healthBar.Percentage.Text = pctText
-                        end
-                        healthBar.Percentage.Position = Vector2.new(vector.X - (height * 0.75) - 7, vector.Y - height / 2 - 15)
-                        healthBar.Percentage.Color = optHealthColor
-                        healthBar.Percentage.Visible = true
-                    else
-                        healthBar.Background.Visible = false; healthBar.Bar.Visible = false; healthBar.Percentage.Visible = false
-                    end
-                end
-
-                -- [名字]
-                local nameText = NpcDrawData.Names[key]
-                if nameText then
-                    if optName then
-                        if nameText.Text ~= data.name then nameText.Text = data.name end
-                        nameText.Position = Vector2.new(vector.X, vector.Y - 20)
-                        nameText.Color = optNameColor
-                        nameText.Visible = true
-                    else nameText.Visible = false end
-                end
-
-                -- [距离]
-                local distanceText = NpcDrawData.Distances[key]
-                if distanceText then
-                    if optDistance and localHrp then
-                        local distance = math.floor((hrpPos - localHrp.Position).Magnitude)
-                        local distStr = distance .. "m"
-                        if distanceText.Text ~= distStr then distanceText.Text = distStr end
-                        distanceText.Position = Vector2.new(vector.X, vector.Y + 10)
-                        distanceText.Color = optNameColor
-                        distanceText.Visible = true
-                    else distanceText.Visible = false end
-                end
-
-                -- [坐标]
-                local coordsText = NpcDrawData.Coords[key]
-                if coordsText then
-                    if optCoords then
-                        local coordStr = string.format("%.1f, %.1f, %.1f", hrpPos.X, hrpPos.Y, hrpPos.Z)
-                        if coordsText.Text ~= coordStr then coordsText.Text = coordStr end
-                        coordsText.Position = Vector2.new(vector.X, vector.Y + 25)
-                        coordsText.Color = optNameColor
-                        coordsText.Visible = true
-                    else coordsText.Visible = false end
-                end
-            else
-                if NpcDrawData.Boxes[key] then NpcDrawData.Boxes[key].Visible = false end
-                if NpcDrawData.Rays[key] then NpcDrawData.Rays[key].Visible = false end
-                if NpcDrawData.Names[key] then NpcDrawData.Names[key].Visible = false end
-                if NpcDrawData.Distances[key] then NpcDrawData.Distances[key].Visible = false end
-                if NpcDrawData.Coords[key] then NpcDrawData.Coords[key].Visible = false end
-                if NpcDrawData.HealthBars[key] then
-                    NpcDrawData.HealthBars[key].Bar.Visible = false; NpcDrawData.HealthBars[key].Background.Visible = false; NpcDrawData.HealthBars[key].Percentage.Visible = false
-                end
-            end
-        else
-            if NpcDrawData.Boxes[key] then NpcDrawData.Boxes[key].Visible = false end
-            if NpcDrawData.Rays[key] then NpcDrawData.Rays[key].Visible = false end
-            if NpcDrawData.Names[key] then NpcDrawData.Names[key].Visible = false end
-            if NpcDrawData.Distances[key] then NpcDrawData.Distances[key].Visible = false end
-            if NpcDrawData.Coords[key] then NpcDrawData.Coords[key].Visible = false end
-            if NpcDrawData.HealthBars[key] then
-                NpcDrawData.HealthBars[key].Bar.Visible = false; NpcDrawData.HealthBars[key].Background.Visible = false; NpcDrawData.HealthBars[key].Percentage.Visible = false
-            end
-        end
-    end
-
-    for key, _ in pairs(NpcDrawData.Boxes) do
-        if not NpcCache[key] or not key.Parent then
-            cleanupESP(key)
-        end
-    end
-end
-
-RunService.RenderStepped:Connect(updateESP)
-
--- =============================================================================
--- [UI 栏位配置]
--- =============================================================================
-Tabs.NPC_ESP:AddSection("NPC.eps(测试功能)")
-
--- 新增的 NPC 透视总开关
-Tabs.NPC_ESP:AddToggle("Npc_MasterSwitch", { 
-    Title = "🔴 NPC 透视总开关", 
-    Default = false,
-    Callback = function(Value)
-        NpcEspMasterSwitch = Value
-        if not Value then
-            clearAllNpcEspData() -- 当关闭开关时，立刻断开所有检测，清除变量和画笔
-        end
-    end
-})
-
-Tabs.NPC_ESP:AddSection("NPC 节点扫描路径设置")
-Tabs.NPC_ESP:AddInput("Npc_TargetPath", {
-    Title = "指定 NPC 检索节点路径wyx禁止使用",
-    Default = "workspace",
-    Placeholder = "全图请留 workspace",
-    Numeric = false, Finished = true,
-    Callback = function(v) 
-        local success, targetInst = pcall(function() return loadstring("return " .. v)() end)
-        if success and typeof(targetInst) == "Instance" then
-            CurrentScanRoot = targetInst
-        else
-            CurrentScanRoot = workspace
-        end
-    end
-})
-
-Tabs.NPC_ESP:AddSection("NPC 基础模型外观透视")
-Tabs.NPC_ESP:AddToggle("Npc_Box", { Title = "方框ESP开关", Default = false })
-Tabs.NPC_ESP:AddColorpicker("Npc_BoxColor", { Title = "方框颜色选择", Default = Color3.fromRGB(255, 50, 50) })
-Tabs.NPC_ESP:AddToggle("Npc_Ray", { Title = "射线ESP开关", Default = false })
-Tabs.NPC_ESP:AddColorpicker("Npc_RayColor", { Title = "射线颜色选择", Default = Color3.fromRGB(255, 255, 255) })
-Tabs.NPC_ESP:AddToggle("Npc_Highlight", { Title = "外部高亮发光遮罩", Default = false })
-Tabs.NPC_ESP:AddColorpicker("Npc_HighlightColor", { Title = "发光遮罩颜色", Default = Color3.fromRGB(255, 100, 0) })
-
-Tabs.NPC_ESP:AddSection("NPC 数据附属指标看板")
-Tabs.NPC_ESP:AddToggle("Npc_Health", { Title = "实时血量状态条", Default = false })
-Tabs.NPC_ESP:AddColorpicker("Npc_HealthColor", { Title = "血条文本颜色选择", Default = Color3.fromRGB(255, 50, 50) })
-Tabs.NPC_ESP:AddToggle("Npc_Name", { Title = "显示物体生物名称", Default = false })
-Tabs.NPC_ESP:AddColorpicker("Npc_NameColor", { Title = "名称文本颜色选择", Default = Color3.fromRGB(255, 255, 255) })
-Tabs.NPC_ESP:AddToggle("Npc_Distance", { Title = "显示物我跨度间距(米)", Default = false })
-Tabs.NPC_ESP:AddToggle("Npc_Coords", { Title = "显示三维物理坐标", Default = false })
-
-Window:SelectTab(Tabs.NPC_ESP)
