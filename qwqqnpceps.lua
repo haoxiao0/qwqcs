@@ -632,8 +632,8 @@ end
 -- ==========================================================
 -- 【功能构建】：被动反制系统 (挨打反锁 / Counter-Aim)
 -- ==========================================================
-if Tabs and Tabs.Aimbot then
-    Tabs.Aimbot:AddSection("🛡️ 被动反制系统 (反自瞄)")
+if Tabs and Tabs.Qwqa then
+    Tabs.Qwqa:AddSection("🛡️ 被动反制系统 (反自瞄)")
 
     local QWQ_CounterAim_Enabled = false
     local QWQ_CounterAim_Angle = 15
@@ -724,7 +724,7 @@ if Tabs and Tabs.Aimbot then
     -- ==========================================
     -- UI 控件绑定
     -- ==========================================
-    Tabs.Aimbot:AddToggle("QWQ_CounterAim_Master", {
+    Tabs.Qwqa:AddToggle("QWQ_CounterAim_Master", {
         Title = "开启 挨打反锁 (Counter-Aim)",
         Description = "当其他玩家将枪口/视线对准你时，镜头会瞬间自动锁定他的头部",
         Default = false,
@@ -733,14 +733,14 @@ if Tabs and Tabs.Aimbot then
         end
     })
     
-    Tabs.Aimbot:AddToggle("QWQ_CounterAim_Wall", {
+    Tabs.Qwqa:AddToggle("QWQ_CounterAim_Wall", {
         Title = "反锁墙壁检测",
         Description = "开启后，敌人即使看你，如果中间有墙挡着也不会触发",
         Default = true,
         Callback = function(state) QWQ_CounterAim_WallCheck = state end
     })
     
-    Tabs.Aimbot:AddSlider("QWQ_CounterAim_Angle", {
+    Tabs.Qwqa:AddSlider("QWQ_CounterAim_Angle", {
         Title = "敌方感知敏感度 (角度)",
         Description = "越小越精准（只有死死盯着你才反锁），越大越容易触发（看你附近也反锁）",
         Min = 1,
@@ -750,7 +750,7 @@ if Tabs and Tabs.Aimbot then
         Callback = function(value) QWQ_CounterAim_Angle = value end
     })
     
-    Tabs.Aimbot:AddSlider("QWQ_CounterAim_Smoothness", {
+    Tabs.Qwqa:AddSlider("QWQ_CounterAim_Smoothness", {
         Title = "反锁平滑度",
         Description = "发现有人瞄准你时，镜头甩过去的快慢",
         Min = 0.05,
