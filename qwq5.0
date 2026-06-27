@@ -2418,7 +2418,7 @@ if Tabs and Tabs.Player then
     Tabs.Player:AddSlider("QWQ_SpinBot_UniqueKey_SpeedSlider", {
         Title = "旋转速度",
         Min = 10,
-        Max = 4000, -- 极限陀螺转速
+        Max = 500, -- 极限陀螺转速
         Default = 20,
         Rounding = 0,
         Callback = function(QWQ_SpinBot_UI_SliderState)
