@@ -498,9 +498,8 @@ Tabs.Qwqa:AddToggle("ShowFPS_Toggle", {
 
 
 
-
 -- ==========================================================
--- 【功能构建】：踏空行走 (智能阶梯版) + 悬浮快捷控高按钮 (UI兼容修复版)
+-- 【功能构建】：踏空行走 (智能阶梯版) + 带字悬浮快捷按钮 (UI兼容修复版)
 -- ==========================================================
 if Tabs and Tabs.Qwqa then
     Tabs.Qwqa:AddSection("☁️ 踏空行走 (AirWalk)")
@@ -552,13 +551,18 @@ if Tabs and Tabs.Qwqa then
 
         QWQ_MiniBtn = Instance.new("TextButton")
         QWQ_MiniBtn.Parent = QWQ_MiniBtn_GUI
-        QWQ_MiniBtn.Size = UDim2.new(0, 25, 0, 25) -- 稍微放大至25px，防手机断触
+        QWQ_MiniBtn.Size = UDim2.new(0, 30, 0, 30) -- 稍微放大至30px，让字体更清晰，防断触
         -- 往左下方多移动一段距离，避开所有菜单键和排行榜
         QWQ_MiniBtn.Position = UDim2.new(1, -120, 0, 120) 
-        QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- 初始红色(关闭托底，允许下落)
+        QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- 初始红色
         QWQ_MiniBtn.BorderSizePixel = 0
-        QWQ_MiniBtn.Text = ""
         QWQ_MiniBtn.AutoButtonColor = false
+        
+        -- 【新增】：添加“踏空”文字与灰白色设定
+        QWQ_MiniBtn.Text = "踏空"
+        QWQ_MiniBtn.TextColor3 = Color3.fromRGB(220, 220, 220) -- 灰白色
+        QWQ_MiniBtn.Font = Enum.Font.SourceSansBold
+        QWQ_MiniBtn.TextScaled = true -- 自动缩放字体以完美适应按钮大小
 
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 6)
@@ -670,7 +674,7 @@ if Tabs and Tabs.Qwqa then
     end
 
     -- ==========================================
-    -- 3. UI 控件绑定 (现在绑定在 Tabs.Qwqa)
+    -- 3. UI 控件绑定 (绑定在 Tabs.Qwqa)
     -- ==========================================
     Tabs.Qwqa:AddToggle("QWQ_AirWalk_Toggle", {
         Title = "开启 踏空行走",
@@ -713,8 +717,6 @@ if Tabs and Tabs.Qwqa then
         end
     })
 end
-
-
 
 
 
