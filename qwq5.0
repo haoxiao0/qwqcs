@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "5.5要什么功能QQ跟我说",
+    SubTitle = "5.5要什么功能QQ跟我说更新了踏空",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -499,7 +499,220 @@ Tabs.Qwqa:AddToggle("ShowFPS_Toggle", {
 
 
 
+-- ==========================================================
+-- 【功能构建】：踏空行走 (智能阶梯版) + 悬浮快捷控高按钮 (UI兼容修复版)
+-- ==========================================================
+if Tabs and Tabs.Qwqa then
+    Tabs.Qwqa:AddSection("☁️ 踏空行走 (AirWalk)")
 
+    -- 核心状态与缓存
+    local QWQ_AirWalk_Enabled = false
+    local QWQ_AirWalk_Part = nil
+    local QWQ_AirWalk_Connection = nil
+    local QWQ_AirWalk_CurrentY = 0
+    local QWQ_AirWalk_Size = 8
+    local QWQ_AirWalk_Visible = false
+
+    -- 悬浮按钮状态缓存
+    local QWQ_MiniBtn_GUI = nil
+    local QWQ_MiniBtn = nil
+    local QWQ_MiniBtn_State = false -- false=红色(穿透下落) / true=青蓝色(凝冰托底)
+    local QWQ_MiniBtn_DragConnections = {}
+
+    -- 【安全核心】：安全获取 UI 容器 (防移动端注入器权限不足导致不弹UI)
+    local function GetSafeUIContainer()
+        if gethui then
+            local s, r = pcall(gethui)
+            if s and r then return r end
+        end
+        local s, r = pcall(function() return game:GetService("CoreGui") end)
+        if s and r then return r end
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    -- ==========================================
+    -- 1. 悬浮按钮销毁与创建逻辑
+    -- ==========================================
+    local function DestroyMiniButton()
+        if QWQ_MiniBtn_GUI then QWQ_MiniBtn_GUI:Destroy() QWQ_MiniBtn_GUI = nil end
+        QWQ_MiniBtn = nil
+        QWQ_MiniBtn_State = false
+        for _, conn in ipairs(QWQ_MiniBtn_DragConnections) do pcall(function() conn:Disconnect() end) end
+        table.clear(QWQ_MiniBtn_DragConnections)
+    end
+
+    local function CreateMiniButton()
+        DestroyMiniButton()
+
+        QWQ_MiniBtn_GUI = Instance.new("ScreenGui")
+        QWQ_MiniBtn_GUI.Name = "QWQ_AirWalk_MiniBtn"
+        QWQ_MiniBtn_GUI.Parent = GetSafeUIContainer() -- 使用安全容器
+        QWQ_MiniBtn_GUI.ResetOnSpawn = false
+        QWQ_MiniBtn_GUI.IgnoreGuiInset = true -- 无视屏幕刘海和顶栏遮挡
+
+        QWQ_MiniBtn = Instance.new("TextButton")
+        QWQ_MiniBtn.Parent = QWQ_MiniBtn_GUI
+        QWQ_MiniBtn.Size = UDim2.new(0, 25, 0, 25) -- 稍微放大至25px，防手机断触
+        -- 往左下方多移动一段距离，避开所有菜单键和排行榜
+        QWQ_MiniBtn.Position = UDim2.new(1, -120, 0, 120) 
+        QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- 初始红色(关闭托底，允许下落)
+        QWQ_MiniBtn.BorderSizePixel = 0
+        QWQ_MiniBtn.Text = ""
+        QWQ_MiniBtn.AutoButtonColor = false
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = QWQ_MiniBtn
+
+        -- 点击切换状态
+        QWQ_MiniBtn.Activated:Connect(function()
+            QWQ_MiniBtn_State = not QWQ_MiniBtn_State
+            if QWQ_MiniBtn_State then
+                -- 开启：青蓝色，平台恢复实体
+                QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+                if QWQ_AirWalk_Part then
+                    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then QWQ_AirWalk_CurrentY = hrp.Position.Y - 3.5 end -- 重新锁定当前高度
+                    QWQ_AirWalk_Part.CanCollide = true
+                    QWQ_AirWalk_Part.Transparency = QWQ_AirWalk_Visible and 0.5 or 1
+                end
+            else
+                -- 关闭：红色，平台隐藏并失去碰撞 (玩家下落)
+                QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+                if QWQ_AirWalk_Part then
+                    QWQ_AirWalk_Part.CanCollide = false
+                    QWQ_AirWalk_Part.Transparency = 1
+                end
+            end
+        end)
+
+        -- 拖拽逻辑
+        local dragging, dragStart, startPos = false, nil, nil
+        table.insert(QWQ_MiniBtn_DragConnections, QWQ_MiniBtn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true dragStart = input.Position startPos = QWQ_MiniBtn.Position
+            end
+        end))
+        table.insert(QWQ_MiniBtn_DragConnections, UserInputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                if dragging then
+                    local delta = input.Position - dragStart
+                    QWQ_MiniBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
+            end
+        end))
+        table.insert(QWQ_MiniBtn_DragConnections, UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end))
+    end
+
+    -- ==========================================
+    -- 2. 踏空行走底层逻辑
+    -- ==========================================
+    local function StopAirWalk()
+        if QWQ_AirWalk_Connection then
+            QWQ_AirWalk_Connection:Disconnect()
+            QWQ_AirWalk_Connection = nil
+        end
+        if QWQ_AirWalk_Part then
+            QWQ_AirWalk_Part:Destroy()
+            QWQ_AirWalk_Part = nil
+        end
+        DestroyMiniButton() -- 停止踏空时，一并销毁小按钮
+    end
+
+    local function StartAirWalk()
+        StopAirWalk() 
+        CreateMiniButton() -- 启动踏空时，生成小按钮
+        
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        
+        -- 即使是在死亡/加载状态开启功能，也能强行初始化平台
+        QWQ_AirWalk_CurrentY = hrp and (hrp.Position.Y - 3.5) or 0
+
+        QWQ_AirWalk_Part = Instance.new("Part")
+        QWQ_AirWalk_Part.Name = "QWQ_AirWalk_Platform"
+        QWQ_AirWalk_Part.Size = Vector3.new(QWQ_AirWalk_Size, 1, QWQ_AirWalk_Size)
+        QWQ_AirWalk_Part.Anchored = true
+        QWQ_AirWalk_Part.CanCollide = false -- 初始配合红色按钮，不碰撞
+        QWQ_AirWalk_Part.Transparency = 1
+        QWQ_AirWalk_Part.Material = Enum.Material.Neon
+        QWQ_AirWalk_Part.Color = Color3.fromRGB(135, 206, 235) 
+        QWQ_AirWalk_Part.Parent = workspace
+
+        QWQ_AirWalk_Connection = RunService.Heartbeat:Connect(function()
+            if not QWQ_AirWalk_Enabled or not QWQ_AirWalk_Part or not QWQ_AirWalk_Part.Parent then
+                StopAirWalk() return
+            end
+
+            local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if currentHrp then
+                -- 只有在小按钮开启(青蓝色)时，才进行阶梯高度运算
+                if QWQ_MiniBtn_State then
+                    local currentVelocityY = currentHrp.Velocity.Y
+                    if currentVelocityY > 0.5 then
+                        QWQ_AirWalk_Part.CFrame = CFrame.new(currentHrp.Position.X, QWQ_AirWalk_CurrentY, currentHrp.Position.Z)
+                    else
+                        if (currentHrp.Position.Y - 3.5) > QWQ_AirWalk_CurrentY + 0.5 then
+                            QWQ_AirWalk_CurrentY = currentHrp.Position.Y - 3.5
+                        end
+                        QWQ_AirWalk_Part.CFrame = CFrame.new(currentHrp.Position.X, QWQ_AirWalk_CurrentY, currentHrp.Position.Z)
+                    end
+                else
+                    -- 红色下落状态，平台只跟随XY，不提供任何高度支撑
+                    QWQ_AirWalk_Part.CFrame = CFrame.new(currentHrp.Position.X, currentHrp.Position.Y - 3.5, currentHrp.Position.Z)
+                end
+            end
+        end)
+    end
+
+    -- ==========================================
+    -- 3. UI 控件绑定 (现在绑定在 Tabs.Qwqa)
+    -- ==========================================
+    Tabs.Qwqa:AddToggle("QWQ_AirWalk_Toggle", {
+        Title = "开启 踏空行走",
+        Description = "生成快捷悬浮按钮：红色(下落) / 青蓝色(空中托底)",
+        Default = false,
+        Callback = function(state)
+            QWQ_AirWalk_Enabled = state
+            if state then
+                StartAirWalk()
+            else
+                StopAirWalk()
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddToggle("QWQ_AirWalk_Visible", {
+        Title = "显示透明脚踏板",
+        Description = "开启后，托底状态下能看到脚底的天蓝色判定光环",
+        Default = false,
+        Callback = function(state)
+            QWQ_AirWalk_Visible = state
+            if QWQ_AirWalk_Part and QWQ_MiniBtn_State then
+                QWQ_AirWalk_Part.Transparency = state and 0.5 or 1
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddSlider("QWQ_AirWalk_Size", {
+        Title = "平台安全面积",
+        Description = "如果经常漏脚掉下去，可以把面积调大一点",
+        Min = 3,
+        Max = 100,
+        Default = 8,
+        Rounding = 0,
+        Callback = function(value)
+            QWQ_AirWalk_Size = value
+            if QWQ_AirWalk_Part then
+                QWQ_AirWalk_Part.Size = Vector3.new(value, 1, value)
+            end
+        end
+    })
+end
 
 
 
