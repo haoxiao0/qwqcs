@@ -629,7 +629,137 @@ end
 
 
 
+-- ==========================================================
+-- 【功能构建】：被动反制系统 (挨打反锁 / Counter-Aim)
+-- ==========================================================
+if Tabs and Tabs.Aimbot then
+    Tabs.Aimbot:AddSection("🛡️ 被动反制系统 (反自瞄)")
 
+    local QWQ_CounterAim_Enabled = false
+    local QWQ_CounterAim_Angle = 15
+    local QWQ_CounterAim_Smoothness = 0.6
+    local QWQ_CounterAim_WallCheck = true
+    
+    -- 核心渲染循环：实时监测全图所有玩家的视线
+    RunService.RenderStepped:Connect(function()
+        if not QWQ_CounterAim_Enabled then return end
+        
+        local localChar = LocalPlayer.Character
+        local localHead = localChar and localChar:FindFirstChild("Head")
+        local localHrp = localChar and localChar:FindFirstChild("HumanoidRootPart")
+        
+        -- 确保自身存活且实体完整
+        if not localHead or not localHrp then return end
+        
+        local threatPart = nil
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                -- 【黑名单容错】如果你开启了黑名单，被黑名单内的玩家看不会触发反锁
+                if AimbotBlacklistEnabled and AimbotBlacklist and table.find(AimbotBlacklist, player.Name) then 
+                    continue 
+                end
+                
+                -- 【队伍检测容错】
+                if AimbotTeamCheck and player.Team == LocalPlayer.Team then 
+                    continue 
+                end
+                
+                local char = player.Character
+                if char then
+                    local head = char:FindFirstChild("Head")
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    
+                    if head and hrp and hum and hum.Health > 0 then
+                        -- 计算敌人头部到我方头部的方向向量
+                        local dirToMe = (localHead.Position - head.Position).Unit
+                        
+                        -- 敌人的实际面朝方向 (取头部的LookVector最准确)
+                        local enemyLookDir = head.CFrame.LookVector
+                        
+                        -- 点积运算求出视线夹角
+                        local dotProduct = math.clamp(dirToMe:Dot(enemyLookDir), -1, 1)
+                        local angle = math.deg(math.acos(dotProduct))
+                        
+                        -- 如果敌人的视线夹角小于你设置的阈值，说明他正盯着你看
+                        if angle <= QWQ_CounterAim_Angle then
+                            local hasLineOfSight = true
+                            
+                            -- 墙壁检测：如果别人隔着墙看你，不触发反锁
+                            if QWQ_CounterAim_WallCheck then
+                                local rayParams = RaycastParams.new()
+                                rayParams.FilterDescendantsInstances = {char}
+                                rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                                
+                                -- 打一条从敌人头部到我方的射线
+                                local result = workspace:Raycast(head.Position, dirToMe * 1000, rayParams)
+                                
+                                -- 如果射线命中了我方的身体部件，说明视线无遮挡
+                                if result and result.Instance and result.Instance:IsDescendantOf(localChar) then
+                                    hasLineOfSight = true
+                                else
+                                    hasLineOfSight = false
+                                end
+                            end
+                            
+                            if hasLineOfSight then
+                                threatPart = head -- 锁定该威胁的头部
+                                break -- 找到第一个盯着我的威胁就立即执行反锁
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        -- 执行镜头反击反锁
+        if threatPart then
+            -- 如果同时开启了主动自瞄，反锁系统的优先级更高，会短暂抢夺控制权
+            local newCFrame = CFrame.new(Camera.CFrame.Position, threatPart.Position)
+            Camera.CFrame = Camera.CFrame:Lerp(newCFrame, QWQ_CounterAim_Smoothness)
+        end
+    end)
+    
+    -- ==========================================
+    -- UI 控件绑定
+    -- ==========================================
+    Tabs.Aimbot:AddToggle("QWQ_CounterAim_Master", {
+        Title = "开启 挨打反锁 (Counter-Aim)",
+        Description = "当其他玩家将枪口/视线对准你时，镜头会瞬间自动锁定他的头部",
+        Default = false,
+        Callback = function(state)
+            QWQ_CounterAim_Enabled = state
+        end
+    })
+    
+    Tabs.Aimbot:AddToggle("QWQ_CounterAim_Wall", {
+        Title = "反锁墙壁检测",
+        Description = "开启后，敌人即使看你，如果中间有墙挡着也不会触发",
+        Default = true,
+        Callback = function(state) QWQ_CounterAim_WallCheck = state end
+    })
+    
+    Tabs.Aimbot:AddSlider("QWQ_CounterAim_Angle", {
+        Title = "敌方感知敏感度 (角度)",
+        Description = "越小越精准（只有死死盯着你才反锁），越大越容易触发（看你附近也反锁）",
+        Min = 1,
+        Max = 60,
+        Default = 15,
+        Rounding = 0,
+        Callback = function(value) QWQ_CounterAim_Angle = value end
+    })
+    
+    Tabs.Aimbot:AddSlider("QWQ_CounterAim_Smoothness", {
+        Title = "反锁平滑度",
+        Description = "发现有人瞄准你时，镜头甩过去的快慢",
+        Min = 0.05,
+        Max = 1,
+        Default = 0.6,
+        Rounding = 2,
+        Callback = function(value) QWQ_CounterAim_Smoothness = value end
+    })
+end
 
 
 
