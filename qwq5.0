@@ -720,6 +720,397 @@ end
 
 
 
+-- ==========================================================
+-- 【功能构建】：现代亚克力虚拟摇杆 + 独立跳跃键 (完美伪装PC版)
+-- ==========================================================
+if Tabs and Tabs.Qwqa then
+    Tabs.Qwqa:AddSection("🕹️ 虚拟摇杆与按键 (移动端高级移动辅助)")
+
+    -- 【安全核心】：安全获取 UI 容器
+    local function GetSafeUIContainer()
+        if gethui then
+            local s, r = pcall(gethui)
+            if s and r then return r end
+        end
+        local s, r = pcall(function() return game:GetService("CoreGui") end)
+        if s and r then return r end
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    -- 1. 创建独立 GUI 容器 (摇杆和跳跃键共用此容器，实现一键同开同关)
+    local DPadGui = GetSafeUIContainer():FindFirstChild("QWQ_Joystick_GUI")
+    if DPadGui then DPadGui:Destroy() end 
+    
+    DPadGui = Instance.new("ScreenGui")
+    DPadGui.Name = "QWQ_Joystick_GUI"
+    DPadGui.Parent = GetSafeUIContainer()
+    DPadGui.ResetOnSpawn = false
+    DPadGui.Enabled = false -- 初始隐藏
+
+    -- 核心动态尺寸变量
+    local BaseSize = 220
+    local KnobSize = math.floor(BaseSize * (2/5))
+    local LetterLabels = {} 
+    
+    local JumpBtnSize = 100
+    local JumpBtnDraggable = false
+
+    -- ==========================================
+    -- 摇杆模块构建
+    -- ==========================================
+    local JoystickBase = Instance.new("Frame")
+    JoystickBase.Name = "JoystickBase"
+    JoystickBase.Parent = DPadGui
+    JoystickBase.Size = UDim2.new(0, BaseSize, 0, BaseSize)
+    JoystickBase.AnchorPoint = Vector2.new(0, 1) 
+    JoystickBase.Position = UDim2.new(0, 60, 1, -60) 
+    JoystickBase.BackgroundColor3 = Color3.fromRGB(240, 240, 245) 
+    JoystickBase.BackgroundTransparency = 0.65 
+    JoystickBase.BorderSizePixel = 0
+    JoystickBase.Active = true
+
+    local BaseCorner = Instance.new("UICorner")
+    BaseCorner.CornerRadius = UDim.new(0, 30) 
+    BaseCorner.Parent = JoystickBase
+
+    local BaseStroke = Instance.new("UIStroke")
+    BaseStroke.Color = Color3.fromRGB(255, 255, 255)
+    BaseStroke.Transparency = 0.5
+    BaseStroke.Thickness = 1.5
+    BaseStroke.Parent = JoystickBase
+
+    -- 中心圆形分界线 (死区)
+    local DeadZoneRadius = BaseSize / 8
+    local DeadZoneCircle = Instance.new("Frame")
+    DeadZoneCircle.Size = UDim2.new(0, DeadZoneRadius * 2, 0, DeadZoneRadius * 2)
+    DeadZoneCircle.Position = UDim2.new(0.5, 0, 0.5, 0)
+    DeadZoneCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+    DeadZoneCircle.BackgroundTransparency = 1
+    DeadZoneCircle.ZIndex = 2
+    DeadZoneCircle.Parent = JoystickBase
+
+    local DeadZoneCorner = Instance.new("UICorner")
+    DeadZoneCorner.CornerRadius = UDim.new(1, 0)
+    DeadZoneCorner.Parent = DeadZoneCircle
+
+    local DeadZoneStroke = Instance.new("UIStroke")
+    DeadZoneStroke.Color = Color3.fromRGB(255, 255, 255)
+    DeadZoneStroke.Transparency = 0.6
+    DeadZoneStroke.Thickness = 1.5
+    DeadZoneStroke.Parent = DeadZoneCircle
+
+    -- 绘制方向字母
+    local function CreateLetter(text, pos)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1/3, 0, 1/3, 0)
+        label.Position = pos
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = Color3.fromRGB(220, 220, 220) 
+        label.TextTransparency = 0.2 
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = math.floor(BaseSize * 0.16) 
+        label.ZIndex = 1 
+        label.Parent = JoystickBase
+        table.insert(LetterLabels, label)
+    end
+    CreateLetter("W", UDim2.new(1/3, 0, 0, 0))       
+    CreateLetter("S", UDim2.new(1/3, 0, 2/3, 0))     
+    CreateLetter("A", UDim2.new(0, 0, 1/3, 0))       
+    CreateLetter("D", UDim2.new(2/3, 0, 1/3, 0))     
+
+    -- 中心摇杆球
+    local JoystickKnob = Instance.new("Frame")
+    JoystickKnob.Name = "JoystickKnob"
+    JoystickKnob.Parent = JoystickBase
+    JoystickKnob.Size = UDim2.new(0, KnobSize, 0, KnobSize)
+    JoystickKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+    JoystickKnob.Position = UDim2.new(0.5, 0, 0.5, 0) 
+    JoystickKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    JoystickKnob.BackgroundTransparency = 0.2 
+    JoystickKnob.BorderSizePixel = 0
+    JoystickKnob.ZIndex = 5 
+
+    local KnobCorner = Instance.new("UICorner")
+    KnobCorner.CornerRadius = UDim.new(1, 0) 
+    KnobCorner.Parent = JoystickKnob
+
+    local KnobStroke = Instance.new("UIStroke")
+    KnobStroke.Color = Color3.fromRGB(200, 200, 200)
+    KnobStroke.Transparency = 0.4
+    KnobStroke.Thickness = 2
+    KnobStroke.Parent = JoystickKnob
+
+    -- ==========================================
+    -- 跳跃键模块构建
+    -- ==========================================
+    local JumpButton = Instance.new("TextButton")
+    JumpButton.Name = "JumpButton"
+    JumpButton.Parent = DPadGui
+    JumpButton.Size = UDim2.new(0, JumpBtnSize, 0, JumpBtnSize)
+    JumpButton.AnchorPoint = Vector2.new(1, 1) -- 锚点设在右下角
+    JumpButton.Position = UDim2.new(1, -60, 1, -60) -- 初始靠右下方
+    JumpButton.BackgroundColor3 = Color3.fromRGB(240, 240, 245)
+    JumpButton.BackgroundTransparency = 0.65 -- 亚克力材质
+    JumpButton.BorderSizePixel = 0
+    -- 【修改】：添加向上的字符指示
+    JumpButton.Text = "▲\nJUMP"
+    JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JumpButton.TextTransparency = 0.3
+    JumpButton.Font = Enum.Font.SourceSansBold
+    JumpButton.TextSize = 22
+    JumpButton.AutoButtonColor = false
+    JumpButton.Active = true
+
+    local JumpCorner = Instance.new("UICorner")
+    JumpCorner.CornerRadius = UDim.new(1, 0) 
+    JumpCorner.Parent = JumpButton
+
+    local JumpStroke = Instance.new("UIStroke")
+    -- 【修改】：灰白色描边，透明度调整为与亚克力板同等 (0.65)
+    JumpStroke.Color = Color3.fromRGB(220, 220, 220)
+    JumpStroke.Transparency = 0.65
+    JumpStroke.Thickness = 1.5
+    JumpStroke.Parent = JumpButton
+
+    -- ==========================================
+    -- 动态 UI 刷新引擎
+    -- ==========================================
+    local function UpdateJoystickUI()
+        KnobSize = math.floor(BaseSize * (2/5))
+        local newDeadZoneRadius = BaseSize / 8
+
+        JoystickBase.Size = UDim2.new(0, BaseSize, 0, BaseSize)
+        DeadZoneCircle.Size = UDim2.new(0, newDeadZoneRadius * 2, 0, newDeadZoneRadius * 2)
+        JoystickKnob.Size = UDim2.new(0, KnobSize, 0, KnobSize)
+
+        for _, label in ipairs(LetterLabels) do
+            label.TextSize = math.floor(BaseSize * 0.16)
+        end
+    end
+
+    local function UpdateJumpBtnUI()
+        JumpButton.Size = UDim2.new(0, JumpBtnSize, 0, JumpBtnSize)
+        JumpButton.TextSize = math.floor(JumpBtnSize * 0.22)
+    end
+
+    -- ==========================================
+    -- 核心：底层物理键盘信号伪装引擎 (VIM)
+    -- ==========================================
+    local VIM = game:GetService("VirtualInputManager")
+    local activeKeys = {}
+    
+    local draggingJoystick = false
+    local dragInputJoystick = nil
+
+    local draggingJump = false
+    local dragInputJump = nil
+    local dragStartJump = nil
+    local startPosJump = nil
+
+    -- 释放所有按键 (摇杆+跳跃)
+    local function releaseAllKeys()
+        for key, _ in pairs(activeKeys) do
+            VIM:SendKeyEvent(false, key, false, game)
+        end
+        table.clear(activeKeys)
+        VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+    end
+
+    local function updateKeys(newKeys)
+        for key, _ in pairs(activeKeys) do
+            if not table.find(newKeys, key) then
+                VIM:SendKeyEvent(false, key, false, game)
+                activeKeys[key] = nil
+            end
+        end
+        for _, key in ipairs(newKeys) do
+            if not activeKeys[key] then
+                VIM:SendKeyEvent(true, key, false, game)
+                activeKeys[key] = true
+            end
+        end
+    end
+
+    -- 后台独立频闪掩码，防手机滑动判定
+    local function StartPCMaskingThread()
+        task.spawn(function()
+            while draggingJoystick do
+                pcall(function()
+                    VIM:SendKeyEvent(true, Enum.KeyCode.F15, false, game)
+                    task.wait(0.01)
+                    VIM:SendKeyEvent(false, Enum.KeyCode.F15, false, game)
+                end)
+                task.wait(0.2)
+            end
+        end)
+    end
+
+    -- 【摇杆事件】
+    local function handleJoystickInput(inputPosition)
+        local baseCenter = JoystickBase.AbsolutePosition + (JoystickBase.AbsoluteSize / 2)
+        local delta = Vector2.new(inputPosition.X, inputPosition.Y) - baseCenter
+
+        local maxVisualRadius = (BaseSize - KnobSize) / 2
+        local visualDelta = delta
+        if visualDelta.Magnitude > maxVisualRadius then
+            visualDelta = visualDelta.Unit * maxVisualRadius
+        end
+        
+        JoystickKnob.Position = UDim2.new(0.5, visualDelta.X, 0.5, visualDelta.Y)
+
+        local threshold = BaseSize / 10 
+        local targetKeys = {}
+
+        if delta.Y < -threshold then table.insert(targetKeys, Enum.KeyCode.W) end
+        if delta.Y > threshold then table.insert(targetKeys, Enum.KeyCode.S) end
+        if delta.X < -threshold then table.insert(targetKeys, Enum.KeyCode.A) end
+        if delta.X > threshold then table.insert(targetKeys, Enum.KeyCode.D) end
+
+        updateKeys(targetKeys)
+    end
+
+    JoystickBase.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingJoystick = true
+            dragInputJoystick = input
+            StartPCMaskingThread()
+            handleJoystickInput(input.Position)
+        end
+    end)
+
+    -- 【跳跃键事件】
+    JumpButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if JumpBtnDraggable then
+                -- 拖拽模式
+                draggingJump = true
+                dragInputJump = input
+                dragStartJump = input.Position
+                startPosJump = JumpButton.Position
+            else
+                -- 触发跳跃 (伪装电脑按 Space)
+                JumpButton.BackgroundTransparency = 0.4 
+                VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+            end
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            -- 摇杆滑动
+            if draggingJoystick and input == dragInputJoystick then
+                handleJoystickInput(input.Position)
+            end
+            -- 跳跃键拖拽
+            if draggingJump and input == dragInputJump and JumpBtnDraggable then
+                local delta = input.Position - dragStartJump
+                JumpButton.Position = UDim2.new(
+                    startPosJump.X.Scale, startPosJump.X.Offset + delta.X, 
+                    startPosJump.Y.Scale, startPosJump.Y.Offset + delta.Y
+                )
+            end
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        -- 摇杆松开
+        if input == dragInputJoystick then
+            draggingJoystick = false
+            dragInputJoystick = nil
+            releaseAllKeys()
+            game:GetService("TweenService"):Create(JoystickKnob, TweenInfo.new(0.2, Enum.EasingStyle.Bounce), {
+                Position = UDim2.new(0.5, 0, 0.5, 0)
+            }):Play()
+        end
+        -- 跳跃键松开
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if draggingJump and input == dragInputJump then
+                draggingJump = false
+                dragInputJump = nil
+            elseif not JumpBtnDraggable then
+                JumpButton.BackgroundTransparency = 0.65
+                VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+            end
+        end
+    end)
+
+
+    -- ==========================================
+    -- UI 控件绑定
+    -- ==========================================
+    
+    -- 【核心】：统一的主开关，同开同关
+    Tabs.Qwqa:AddToggle("QWQ_Joystick_Toggle", {
+        Title = "显示 虚拟摇杆与跳跃键",
+        Description = "开启后屏幕显示移动控制组件，向服务器强制发送物理键盘信号防识别",
+        Default = false,
+        Callback = function(state)
+            DPadGui.Enabled = state -- 控制总容器显示/隐藏
+            
+            -- 关闭时清理所有内存与状态
+            if not state then
+                draggingJoystick = false
+                dragInputJoystick = nil
+                draggingJump = false
+                dragInputJump = nil
+                releaseAllKeys()
+                JoystickKnob.Position = UDim2.new(0.5, 0, 0.5, 0)
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddToggle("QWQ_JumpBtn_Draggable", {
+        Title = "编辑跳跃键位置 (拖动模式)",
+        Description = "开启后拖动跳跃键调整位置；调整完毕后请关闭开关以恢复跳跃功能！",
+        Default = false,
+        Callback = function(state)
+            JumpBtnDraggable = state
+            if state then
+                JumpButton.Text = "拖动"
+                JumpButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+            else
+                JumpButton.Text = "▲\nJUMP"
+                JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddSlider("QWQ_Joystick_SizeSlider", {
+        Title = "摇杆大小 (左下角锚定)",
+        Min = 100,
+        Max = 400,
+        Default = 220,
+        Rounding = 0,
+        Callback = function(value)
+            BaseSize = value
+            UpdateJoystickUI()
+        end
+    })
+
+    Tabs.Qwqa:AddSlider("QWQ_JumpBtn_SizeSlider", {
+        Title = "跳跃键独立大小",
+        Min = 50,
+        Max = 200,
+        Default = 100,
+        Rounding = 0,
+        Callback = function(value)
+            JumpBtnSize = value
+            UpdateJumpBtnUI()
+        end
+    })
+
+    Tabs.Qwqa:AddColorpicker("QWQ_Joystick_ColorPicker", {
+        Title = "全局亚克力颜色",
+        Description = "统一更改底座与跳跃键的色调，完美保留玻璃高光与透明度",
+        Default = Color3.fromRGB(240, 240, 245),
+        Callback = function(value)
+            JoystickBase.BackgroundColor3 = value
+            JumpButton.BackgroundColor3 = value
+        end
+    })
+end
+
 
 
 
@@ -2773,6 +3164,146 @@ end)
 if LocalPlayer.Character then
     updateOriginalJumpPower()
 end 
+
+
+-- ==========================================================
+-- 【功能构建】：被动反制系统 (挨打反锁 / Counter-Aim)
+-- ==========================================================
+if Tabs and Tabs.Aimbot then
+    Tabs.Aimbot:AddSection("🛡️ 被动反制系统 (反自瞄)")
+
+    local QWQ_CounterAim_Enabled = false
+    local QWQ_CounterAim_Angle = 15
+    local QWQ_CounterAim_Smoothness = 0.6
+    local QWQ_CounterAim_WallCheck = true
+    
+    -- 核心渲染循环：实时监测全图所有玩家的视线
+    RunService.RenderStepped:Connect(function()
+        if not QWQ_CounterAim_Enabled then return end
+        
+        local localChar = LocalPlayer.Character
+        local localHead = localChar and localChar:FindFirstChild("Head")
+        local localHrp = localChar and localChar:FindFirstChild("HumanoidRootPart")
+        
+        -- 确保自身存活且实体完整
+        if not localHead or not localHrp then return end
+        
+        local threatPart = nil
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                -- 【黑名单容错】如果你开启了黑名单，被黑名单内的玩家看不会触发反锁
+                if AimbotBlacklistEnabled and AimbotBlacklist and table.find(AimbotBlacklist, player.Name) then 
+                    continue 
+                end
+                
+                -- 【队伍检测容错】
+                if AimbotTeamCheck and player.Team == LocalPlayer.Team then 
+                    continue 
+                end
+                
+                local char = player.Character
+                if char then
+                    local head = char:FindFirstChild("Head")
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    
+                    if head and hrp and hum and hum.Health > 0 then
+                        -- 计算敌人头部到我方头部的方向向量
+                        local dirToMe = (localHead.Position - head.Position).Unit
+                        
+                        -- 敌人的实际面朝方向 (取头部的LookVector最准确)
+                        local enemyLookDir = head.CFrame.LookVector
+                        
+                        -- 点积运算求出视线夹角
+                        local dotProduct = math.clamp(dirToMe:Dot(enemyLookDir), -1, 1)
+                        local angle = math.deg(math.acos(dotProduct))
+                        
+                        -- 如果敌人的视线夹角小于你设置的阈值，说明他正盯着你看
+                        if angle <= QWQ_CounterAim_Angle then
+                            local hasLineOfSight = true
+                            
+                            -- 墙壁检测：如果别人隔着墙看你，不触发反锁
+                            if QWQ_CounterAim_WallCheck then
+                                local rayParams = RaycastParams.new()
+                                rayParams.FilterDescendantsInstances = {char}
+                                rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                                
+                                -- 打一条从敌人头部到我方的射线
+                                local result = workspace:Raycast(head.Position, dirToMe * 1000, rayParams)
+                                
+                                -- 如果射线命中了我方的身体部件，说明视线无遮挡
+                                if result and result.Instance and result.Instance:IsDescendantOf(localChar) then
+                                    hasLineOfSight = true
+                                else
+                                    hasLineOfSight = false
+                                end
+                            end
+                            
+                            if hasLineOfSight then
+                                threatPart = head -- 锁定该威胁的头部
+                                break -- 找到第一个盯着我的威胁就立即执行反锁
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        -- 执行镜头反击反锁
+        if threatPart then
+            -- 如果同时开启了主动自瞄，反锁系统的优先级更高，会短暂抢夺控制权
+            local newCFrame = CFrame.new(Camera.CFrame.Position, threatPart.Position)
+            Camera.CFrame = Camera.CFrame:Lerp(newCFrame, QWQ_CounterAim_Smoothness)
+        end
+    end)
+    
+    -- ==========================================
+    -- UI 控件绑定
+    -- ==========================================
+    Tabs.Aimbot:AddToggle("QWQ_CounterAim_Master", {
+        Title = "开启 挨打反锁 (Counter-Aim)",
+        Description = "当其他玩家将枪口/视线对准你时，镜头会瞬间自动锁定他的头部",
+        Default = false,
+        Callback = function(state)
+            QWQ_CounterAim_Enabled = state
+        end
+    })
+    
+    Tabs.Aimbot:AddToggle("QWQ_CounterAim_Wall", {
+        Title = "反锁墙壁检测",
+        Description = "开启后，敌人即使看你，如果中间有墙挡着也不会触发",
+        Default = true,
+        Callback = function(state) QWQ_CounterAim_WallCheck = state end
+    })
+    
+    Tabs.Aimbot:AddSlider("QWQ_CounterAim_Angle", {
+        Title = "敌方感知敏感度 (角度)",
+        Description = "越小越精准（只有死死盯着你才反锁），越大越容易触发（看你附近也反锁）",
+        Min = 1,
+        Max = 60,
+        Default = 15,
+        Rounding = 0,
+        Callback = function(value) QWQ_CounterAim_Angle = value end
+    })
+    
+    Tabs.Aimbot:AddSlider("QWQ_CounterAim_Smoothness", {
+        Title = "反锁平滑度",
+        Description = "发现有人瞄准你时，镜头甩过去的快慢",
+        Min = 0.05,
+        Max = 1,
+        Default = 0.6,
+        Rounding = 2,
+        Callback = function(value) QWQ_CounterAim_Smoothness = value end
+    })
+end
+
+
+
+
+
+
+
 
 --自瞄
 
