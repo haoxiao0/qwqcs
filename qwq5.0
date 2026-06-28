@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "5.5要什么功能QQ跟我说更新了踏空",
+    SubTitle = "5.8更新了自动扳机,反瞄准,键盘(和自动扳机一起的)",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -19,6 +19,7 @@ local Tabs = {
     Player = Window:AddTab({ Title = "人物", Icon = "rbxassetid://6558374856" }),
     ESP = Window:AddTab({ Title = "ESP", Icon = "rbxassetid://6558374856" }),
     NPC_ESP = Window:AddTab({ Title = "NPC.EPS", Icon = "rbxassetid://6558374856" }),
+    clickbot = Window:AddTab({ Title = "自动扳机", Icon = "rbxassetid://6558374856" }),
     Aimbot = Window:AddTab({ Title = "自瞄", Icon = "rbxassetid://5205790785" }),
     Teleport = Window:AddTab({ Title = "传送", Icon = "rbxassetid://6558374856" }),
     FOV = Window:AddTab({ Title = "视角", Icon = "rbxassetid://6558374856" }),
@@ -498,8 +499,9 @@ Tabs.Qwqa:AddToggle("ShowFPS_Toggle", {
 
 
 
+
 -- ==========================================================
--- 【功能构建】：踏空行走 (智能阶梯版) + 带字悬浮快捷按钮 (UI兼容修复版)
+-- 【功能构建】：踏空行走 (智能阶梯版) + 悬浮快捷控高按钮 (UI兼容修复版)
 -- ==========================================================
 if Tabs and Tabs.Qwqa then
     Tabs.Qwqa:AddSection("☁️ 踏空行走 (AirWalk)")
@@ -551,18 +553,13 @@ if Tabs and Tabs.Qwqa then
 
         QWQ_MiniBtn = Instance.new("TextButton")
         QWQ_MiniBtn.Parent = QWQ_MiniBtn_GUI
-        QWQ_MiniBtn.Size = UDim2.new(0, 30, 0, 30) -- 稍微放大至30px，让字体更清晰，防断触
+        QWQ_MiniBtn.Size = UDim2.new(0, 25, 0, 25) -- 稍微放大至25px，防手机断触
         -- 往左下方多移动一段距离，避开所有菜单键和排行榜
         QWQ_MiniBtn.Position = UDim2.new(1, -120, 0, 120) 
-        QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- 初始红色
+        QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- 初始红色(关闭托底，允许下落)
         QWQ_MiniBtn.BorderSizePixel = 0
+        QWQ_MiniBtn.Text = ""
         QWQ_MiniBtn.AutoButtonColor = false
-        
-        -- 【新增】：添加“踏空”文字与灰白色设定
-        QWQ_MiniBtn.Text = "踏空"
-        QWQ_MiniBtn.TextColor3 = Color3.fromRGB(220, 220, 220) -- 灰白色
-        QWQ_MiniBtn.Font = Enum.Font.SourceSansBold
-        QWQ_MiniBtn.TextScaled = true -- 自动缩放字体以完美适应按钮大小
 
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 6)
@@ -674,7 +671,7 @@ if Tabs and Tabs.Qwqa then
     end
 
     -- ==========================================
-    -- 3. UI 控件绑定 (绑定在 Tabs.Qwqa)
+    -- 3. UI 控件绑定 (现在绑定在 Tabs.Qwqa)
     -- ==========================================
     Tabs.Qwqa:AddToggle("QWQ_AirWalk_Toggle", {
         Title = "开启 踏空行走",
@@ -717,6 +714,8 @@ if Tabs and Tabs.Qwqa then
         end
     })
 end
+
+
 
 
 
@@ -1110,9 +1109,6 @@ if Tabs and Tabs.Qwqa then
         end
     })
 end
-
-
-
 
 
 
@@ -2500,6 +2496,372 @@ if Tabs and Tabs.NPC_ESP then
     Tabs.NPC_ESP:AddColorpicker("NPC_HighlightColor", { Title = "高亮颜色", Default = Color3.fromRGB(255, 85, 0), Callback = function(v) Options.NPC_HighlightColor.Value = v end })
 end
 
+-- ==========================================================
+-- 【功能构建】：自动扳机 (TriggerBot) - 悬浮快捷开关/纯净版
+-- ==========================================================
+if Tabs and Tabs.clickbot then
+    Tabs.clickbot:AddSection("🔫 自动扳机 (TriggerBot)")
+
+    -- 核心控制变量
+    local QWQ_Trigger_MasterEnabled = false -- 注入器面板总开关
+    local QWQ_Trigger_BtnEnabled = true     -- 悬浮按钮控制的实际开关 (默认开启)
+    local QWQ_Trigger_MouseClick = false
+    local QWQ_Trigger_TargetPlayers = false
+    local QWQ_Trigger_TeamCheck = false 
+    local QWQ_Trigger_TargetNPCs = false
+    local QWQ_Trigger_WallCheck = true 
+    local QWQ_Trigger_Radius = 100
+    local QWQ_Trigger_Delay = 0.1
+    local QWQ_Trigger_FOVColor = Color3.fromRGB(255, 0, 0)
+
+    local QWQ_Trigger_NPC_Cache = {}
+    
+    -- 悬浮按钮状态变量
+    local QWQ_Trigger_MiniBtn_GUI = nil
+    local QWQ_Trigger_Btn = nil
+    local QWQ_Trigger_DragConnections = {}
+
+    -- 【安全获取 UI 容器】
+    local function GetSafeUIContainer()
+        if gethui then
+            local s, r = pcall(gethui)
+            if s and r then return r end
+        end
+        local s, r = pcall(function() return game:GetService("CoreGui") end)
+        if s and r then return r end
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    -- 1. 创建 FOV 准星 GUI
+    local TriggerGui = GetSafeUIContainer():FindFirstChild("QWQ_Trigger_GUI") or Instance.new("ScreenGui")
+    TriggerGui.Name = "QWQ_Trigger_GUI"
+    TriggerGui.Parent = GetSafeUIContainer()
+    TriggerGui.IgnoreGuiInset = true
+    TriggerGui.ResetOnSpawn = false
+
+    local TriggerFOV = Instance.new("Frame")
+    TriggerFOV.Name = "TriggerFOV"
+    TriggerFOV.Parent = TriggerGui
+    TriggerFOV.AnchorPoint = Vector2.new(0.5, 0.5)
+    TriggerFOV.Position = UDim2.new(0.5, 0, 0.5, 0)
+    TriggerFOV.Size = UDim2.new(0, QWQ_Trigger_Radius * 2, 0, QWQ_Trigger_Radius * 2)
+    TriggerFOV.BackgroundTransparency = 1
+    TriggerFOV.Visible = false
+
+    local TriggerStroke = Instance.new("UIStroke", TriggerFOV)
+    TriggerStroke.Thickness = 1
+    TriggerStroke.Color = QWQ_Trigger_FOVColor
+
+    local TriggerCorner = Instance.new("UICorner", TriggerFOV)
+    TriggerCorner.CornerRadius = UDim.new(1, 0)
+
+    -- ==========================================
+    -- 悬浮独立 UI 构建与销毁逻辑
+    -- ==========================================
+    local function DestroyTriggerButton()
+        if QWQ_Trigger_MiniBtn_GUI then QWQ_Trigger_MiniBtn_GUI:Destroy() QWQ_Trigger_MiniBtn_GUI = nil end
+        QWQ_Trigger_Btn = nil
+        for _, conn in ipairs(QWQ_Trigger_DragConnections) do pcall(function() conn:Disconnect() end) end
+        table.clear(QWQ_Trigger_DragConnections)
+    end
+
+    local function CreateTriggerButton()
+        DestroyTriggerButton() 
+        QWQ_Trigger_BtnEnabled = true -- 每次生成默认恢复为开启状态
+        
+        QWQ_Trigger_MiniBtn_GUI = Instance.new("ScreenGui")
+        QWQ_Trigger_MiniBtn_GUI.Name = "QWQ_Trigger_MiniBtn"
+        QWQ_Trigger_MiniBtn_GUI.Parent = GetSafeUIContainer()
+        QWQ_Trigger_MiniBtn_GUI.ResetOnSpawn = false
+        QWQ_Trigger_MiniBtn_GUI.IgnoreGuiInset = true 
+        
+        QWQ_Trigger_Btn = Instance.new("TextButton")
+        QWQ_Trigger_Btn.Parent = QWQ_Trigger_MiniBtn_GUI
+        QWQ_Trigger_Btn.Size = UDim2.new(0, 50, 0, 30) -- 要求：50x30
+        QWQ_Trigger_Btn.Position = UDim2.new(1, -120, 0, 160) -- 放右上角偏下一点，防重叠
+        QWQ_Trigger_Btn.BackgroundColor3 = Color3.fromRGB(0, 200, 150) -- 初始青绿色
+        QWQ_Trigger_Btn.BorderSizePixel = 0
+        QWQ_Trigger_Btn.Text = "扳机开启"
+        QWQ_Trigger_Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        QWQ_Trigger_Btn.Font = Enum.Font.SourceSansBold
+        QWQ_Trigger_Btn.TextScaled = true -- 自适应文字大小
+        QWQ_Trigger_Btn.AutoButtonColor = false
+
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 20) -- 要求：圆角20
+        btnCorner.Parent = QWQ_Trigger_Btn
+        
+        -- 点击切换状态
+        QWQ_Trigger_Btn.Activated:Connect(function()
+            QWQ_Trigger_BtnEnabled = not QWQ_Trigger_BtnEnabled
+            if QWQ_Trigger_BtnEnabled then
+                QWQ_Trigger_Btn.BackgroundColor3 = Color3.fromRGB(0, 200, 150) -- 青绿色
+                QWQ_Trigger_Btn.Text = "扳机开启"
+                TriggerFOV.Visible = true -- 同步显示FOV
+            else
+                QWQ_Trigger_Btn.BackgroundColor3 = Color3.fromRGB(255, 105, 180) -- 粉红色
+                QWQ_Trigger_Btn.Text = "扳机关闭"
+                TriggerFOV.Visible = false -- 同步隐藏FOV
+            end
+        end)
+
+        -- 拖拽逻辑
+        local dragging, dragStart, startPos = false, nil, nil
+        table.insert(QWQ_Trigger_DragConnections, QWQ_Trigger_Btn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true dragStart = input.Position startPos = QWQ_Trigger_Btn.Position
+            end
+        end))
+        table.insert(QWQ_Trigger_DragConnections, UserInputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                if dragging then
+                    local delta = input.Position - dragStart
+                    QWQ_Trigger_Btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
+            end
+        end))
+        table.insert(QWQ_Trigger_DragConnections, UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end))
+    end
+
+    -- ==========================================
+    -- 精准判定系统
+    -- ==========================================
+    local function IsValidNPC(model)
+        if not model or not model:IsA("Model") then return false end
+        if not model:FindFirstChild("HumanoidRootPart") then return false end
+        local hum = model:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return false end
+        if Players:GetPlayerFromCharacter(model) then return false end
+        return true
+    end
+
+    local function GetTargetFromCrosshair()
+        local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+        local ray = Camera:ViewportPointToRay(center.X, center.Y)
+        local params = RaycastParams.new()
+        params.FilterDescendantsInstances = {LocalPlayer.Character or {}}
+        params.FilterType = Enum.RaycastFilterType.Blacklist
+        local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
+        if result and result.Instance then
+            return result.Instance:FindFirstAncestorOfClass("Model")
+        end
+        return nil
+    end
+
+    local function CheckTargetInFOV(character, center, radius)
+        if not character then return false end
+        local partsToCheck = {"HumanoidRootPart", "Head", "UpperTorso", "LowerTorso", "Torso"}
+        for _, partName in ipairs(partsToCheck) do
+            local part = character:FindFirstChild(partName)
+            if part then
+                local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                if onScreen then
+                    if (Vector2.new(pos.X, pos.Y) - center).Magnitude <= radius then
+                        if QWQ_Trigger_WallCheck then
+                            local origin = Camera.CFrame.Position
+                            local dir = part.Position - origin
+                            local params = RaycastParams.new()
+                            params.FilterDescendantsInstances = {LocalPlayer.Character or {}}
+                            params.FilterType = Enum.RaycastFilterType.Blacklist
+                            local res = workspace:Raycast(origin, dir, params)
+                            if res and res.Instance and res.Instance:IsDescendantOf(character) then
+                                return true
+                            end
+                        else
+                            return true
+                        end
+                    end
+                end
+            end
+        end
+        return false
+    end
+
+    -- ==========================================
+    -- 核心点击循环 
+    -- ==========================================
+    task.spawn(function()
+        local VirtualInputManager = game:GetService("VirtualInputManager")
+        while true do
+            task.wait(QWQ_Trigger_Delay)
+            
+            -- 【核心拦截】：必须总开关和悬浮按钮同时开启才生效
+            if not (QWQ_Trigger_MasterEnabled and QWQ_Trigger_BtnEnabled) then continue end
+            
+            local localChar = LocalPlayer.Character
+            local localHum = localChar and localChar:FindFirstChildOfClass("Humanoid")
+            if not localHum or localHum.Health <= 0 then continue end
+
+            local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            local targetFound = false
+
+            -- 1. 优先进行射线精准判定
+            local directModel = GetTargetFromCrosshair()
+            if directModel then
+                local hum = directModel:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 then
+                    local targetPlayer = Players:GetPlayerFromCharacter(directModel)
+                    local isPlayer = targetPlayer ~= nil
+                    
+                    if isPlayer and QWQ_Trigger_TargetPlayers and directModel ~= LocalPlayer.Character then
+                        if not (QWQ_Trigger_TeamCheck and targetPlayer.Team == LocalPlayer.Team) then
+                            targetFound = true
+                        end
+                    elseif not isPlayer and QWQ_Trigger_TargetNPCs and QWQ_Trigger_NPC_Cache[directModel] then
+                        targetFound = true
+                    end
+                end
+            end
+
+            -- 2. 如果没指到，且 FOV 大于 8，则进行容错范围判定
+            if not targetFound and QWQ_Trigger_Radius > 8 then
+                if QWQ_Trigger_TargetPlayers then
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        if player == LocalPlayer then continue end
+                        if QWQ_Trigger_TeamCheck and player.Team == LocalPlayer.Team then continue end
+                        
+                        local char = player.Character
+                        local hum = char and char:FindFirstChildOfClass("Humanoid")
+                        if hum and hum.Health > 0 and CheckTargetInFOV(char, center, QWQ_Trigger_Radius) then
+                            targetFound = true break
+                        end
+                    end
+                end
+                
+                if not targetFound and QWQ_Trigger_TargetNPCs then
+                    for npcModel, _ in pairs(QWQ_Trigger_NPC_Cache) do
+                        local hum = npcModel:FindFirstChildOfClass("Humanoid")
+                        if hum and hum.Health > 0 then
+                            if CheckTargetInFOV(npcModel, center, QWQ_Trigger_Radius) then targetFound = true break end
+                        else
+                            if hum and hum.Health <= 0 then QWQ_Trigger_NPC_Cache[npcModel] = nil end
+                        end
+                    end
+                end
+            end
+
+            -- 3. 触发开火
+            if targetFound then
+                -- 电脑端 - 强制屏幕正中心左键点击
+                if QWQ_Trigger_MouseClick then
+                    pcall(function()
+                        VirtualInputManager:SendMouseButtonEvent(center.X, center.Y, 0, true, game, 1)
+                        task.wait(0.02)
+                        VirtualInputManager:SendMouseButtonEvent(center.X, center.Y, 0, false, game, 1)
+                    end)
+                end
+            end
+        end
+    end)
+
+
+    -- ==========================================
+    -- UI 控件绑定 (已修改为 Tabs.clickbot)
+    -- ==========================================
+    Tabs.clickbot:AddToggle("QWQ_Trigger_Master", {
+        Title = "总开关 (自动扳机)",
+        Description = "开启后屏幕生成快捷控制小按钮，支持一键热切换",
+        Default = false,
+        Callback = function(state)
+            QWQ_Trigger_MasterEnabled = state
+            TriggerFOV.Visible = state
+            
+            if state then
+                CreateTriggerButton()
+                if QWQ_Trigger_TargetNPCs then
+                    for _, obj in ipairs(workspace:GetDescendants()) do
+                        if obj:IsA("Model") and IsValidNPC(obj) then QWQ_Trigger_NPC_Cache[obj] = true end
+                    end
+                end
+            else
+                DestroyTriggerButton()
+                TriggerFOV.Visible = false
+            end
+        end
+    })
+    
+    Tabs.clickbot:AddToggle("QWQ_Trigger_WallCheckToggle", {
+        Title = "开启墙壁检测 (防隔墙射击)",
+        Description = "目标被墙挡住时不会开火，保证子弹不白白浪费",
+        Default = true,
+        Callback = function(state) QWQ_Trigger_WallCheck = state end
+    })
+
+    Tabs.clickbot:AddToggle("QWQ_Trigger_MouseToggle", {
+        Title = "使用鼠标左键模拟",
+        Description = "强制在屏幕物理正中心模拟左键点击，向目标开火",
+        Default = false,
+        Callback = function(state) QWQ_Trigger_MouseClick = state end
+    })
+
+    Tabs.clickbot:AddToggle("QWQ_Trigger_Players", {
+        Title = "对 玩家 生效",
+        Default = false,
+        Callback = function(state) QWQ_Trigger_TargetPlayers = state end
+    })
+    
+    Tabs.clickbot:AddToggle("QWQ_Trigger_TeamCheck", {
+        Title = "玩家队伍检测 (防误伤队友)",
+        Description = "开启后自动过滤同队玩家，防止扳机对队友开火",
+        Default = false,
+        Callback = function(state) QWQ_Trigger_TeamCheck = state end
+    })
+
+    Tabs.clickbot:AddToggle("QWQ_Trigger_NPCs", {
+        Title = "对 NPC 生效",
+        Default = false,
+        Callback = function(state)
+            QWQ_Trigger_TargetNPCs = state
+            if not state then table.clear(QWQ_Trigger_NPC_Cache) end
+        end
+    })
+
+    Tabs.clickbot:AddSlider("QWQ_Trigger_Radius", {
+        Title = "扳机 FOV 范围",
+        Min = 1,
+        Max = 400,
+        Default = 100,
+        Rounding = 0,
+        Callback = function(value) 
+            QWQ_Trigger_Radius = value
+            TriggerFOV.Size = UDim2.new(0, value * 2, 0, value * 2)
+        end
+    })
+
+    Tabs.clickbot:AddSlider("QWQ_Trigger_CPS", {
+        Title = "点击频率 (CPS)",
+        Description = "每秒点击次数",
+        Min = 1,
+        Max = 30,
+        Default = 10,
+        Rounding = 0,
+        Callback = function(value) QWQ_Trigger_Delay = 1 / value end
+    })
+
+    Tabs.clickbot:AddColorpicker("QWQ_Trigger_Color", {
+        Title = "FOV 圈颜色",
+        Default = Color3.fromRGB(255, 0, 0),
+        Callback = function(value) 
+            QWQ_Trigger_FOVColor = value 
+            TriggerStroke.Color = value
+        end
+    })
+end
+
+
+
+
+
+
+
+
+
+
+
 
 
 do
@@ -3024,7 +3386,7 @@ if Tabs and Tabs.Player then
     Tabs.Player:AddSlider("QWQ_SpinBot_UniqueKey_SpeedSlider", {
         Title = "旋转速度",
         Min = 10,
-        Max = 500, -- 极限陀螺转速
+        Max = 4000, -- 极限陀螺转速
         Default = 20,
         Rounding = 0,
         Callback = function(QWQ_SpinBot_UI_SliderState)
@@ -3166,6 +3528,8 @@ if LocalPlayer.Character then
 end 
 
 
+
+
 -- ==========================================================
 -- 【功能构建】：被动反制系统 (挨打反锁 / Counter-Aim)
 -- ==========================================================
@@ -3297,9 +3661,6 @@ if Tabs and Tabs.Aimbot then
         Callback = function(value) QWQ_CounterAim_Smoothness = value end
     })
 end
-
-
-
 
 
 
@@ -4306,7 +4667,7 @@ loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield
 Tabs.Tool:AddButton({
     Title = "踏空",
     Callback = function()
-loadstring(game:HttpGet('https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqtakong.lua'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/GhostPlayer352/Test4/main/Float'))()
     end
 })
 
