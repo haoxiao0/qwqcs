@@ -1,15 +1,3 @@
-if not (qwq and qwq == "HAOXIAOmmmmm") then
-    v3 = game
-    v1 = v3.GetService(v3, "StarterGui")
-    v1.SetCore(v1, "SendNotification", {
-        ["Title"] = "唉",
-        ["Text"] = "错误(´-ω-`)",
-        ["Icon"] = "rbxassetid://115393444625574",
-        ["Duration"] = 15
-    })
-    return
-end
-
 local AllowedPlaceId = 13955927965
 
 if game.PlaceId ~= AllowedPlaceId then
