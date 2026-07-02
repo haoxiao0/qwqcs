@@ -21,14 +21,14 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/haoxi
 local Window = Library:CreateWindow({
     Config = MyUIConfig,
     Title = "HAOXIAO原创",
-    SubTitle = "不想改了✔️✔️"
+    SubTitle = "不想改了✔️✔️最后再打开这个脚本，不然会拦截"
 })
 
 local Tabs = {
-    Main = Window:AddTab({ Title = "玩家设置", Icon = "rbxassetid://104508482519186" }),
-    Visuals = Window:AddTab({ Title = "最后再打开,不然会拦截其他脚本", Icon = "rbxassetid://104508482519186" }),
-    GlobalConfig = Window:AddTab({ Title = "eps", Icon = "rbxassetid://104508482519186" }), 
-    clickbot = Window:AddTab({ Title = "别不演会被举报→_→", Icon = "rbxassetid://104508482519186" })
+    Main = Window:AddTab({ Title = "w", Icon = "rbxassetid://104508482519186" }),
+    Visuals = Window:AddTab({ Title = "ESP", Icon = "rbxassetid://104508482519186" }),
+    GlobalConfig = Window:AddTab({ Title = "w", Icon = "rbxassetid://104508482519186" }), 
+    clickbot = Window:AddTab({ Title = "别不演,会被举报", Icon = "rbxassetid://104508482519186" })
 }
 
 local Players = game:GetService("Players")
@@ -52,6 +52,7 @@ local function getLatestToggle(page)
     end
     return toggles[#toggles]
 end
+
 if Tabs.Visuals then
     Tabs.Visuals:AddTitle("玩家透视设置 (ESP)")
 
@@ -528,29 +529,37 @@ if Tabs.clickbot then
                 local origin = args[1]
                 local direction = args[2]
                 if typeof(origin) == "Vector3" and typeof(direction) == "Vector3" and direction.Magnitude > 15 then
-                    isHooking = true 
-                    local newDirection = (CurrentTargetPos - origin).Unit * direction.Magnitude
-                    args[2] = newDirection
-                    sharedParams.FilterDescendantsInstances = {CurrentTargetHitbox.Parent}
-                    args[3] = sharedParams
-                    
-                    local success, result = pcall(function() return oldNamecall(self, unpack(args)) end)
-                    isHooking = false 
-                    if success then return result end
+                    local targetVector = CurrentTargetPos - origin
+                    -- 【修复核心】检查起始点和目标的距离，如果太近则跳过修改，防止返回 NaN 导致画面卡死
+                    if targetVector.Magnitude > 0.1 then 
+                        isHooking = true 
+                        local newDirection = targetVector.Unit * direction.Magnitude
+                        args[2] = newDirection
+                        sharedParams.FilterDescendantsInstances = {CurrentTargetHitbox.Parent}
+                        args[3] = sharedParams
+                        
+                        local success, result = pcall(function() return oldNamecall(self, unpack(args)) end)
+                        isHooking = false 
+                        if success then return result end
+                    end
                 end
             end
         elseif (method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist") and self == workspace then
             if CurrentTargetHitbox and CurrentTargetPos then
                 local ray = args[1]
                 if typeof(ray) == "Ray" and ray.Direction.Magnitude > 15 then
-                    isHooking = true 
-                    local newDirection = (CurrentTargetPos - ray.Origin).Unit * ray.Direction.Magnitude
-                    local newRay = Ray.new(ray.Origin, newDirection)
-                    local success, part, pos, normal, material = pcall(function()
-                        return workspace:FindPartOnRayWithWhitelist(newRay, {CurrentTargetHitbox.Parent})
-                    end)
-                    isHooking = false 
-                    if success then return part, pos, normal, material end
+                    local targetVector = CurrentTargetPos - ray.Origin
+                    -- 【修复核心】同样进行距离安全检查
+                    if targetVector.Magnitude > 0.1 then
+                        isHooking = true 
+                        local newDirection = targetVector.Unit * ray.Direction.Magnitude
+                        local newRay = Ray.new(ray.Origin, newDirection)
+                        local success, part, pos, normal, material = pcall(function()
+                            return workspace:FindPartOnRayWithWhitelist(newRay, {CurrentTargetHitbox.Parent})
+                        end)
+                        isHooking = false 
+                        if success then return part, pos, normal, material end
+                    end
                 end
             end
         end
@@ -630,5 +639,3 @@ if Tabs.clickbot then
         end
     })
 end
-
-
