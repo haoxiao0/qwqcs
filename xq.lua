@@ -1,4 +1,4 @@
-local AllowedPlaceId = 0013955927965
+local AllowedPlaceId = 13955927995
 
 if game.PlaceId ~= AllowedPlaceId then
     local StarterGui = game:GetService("StarterGui")
