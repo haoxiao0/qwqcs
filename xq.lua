@@ -185,13 +185,25 @@ if Tabs.Visuals then
         for player, box in pairs(ESP.Boxes) do
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = player.Character.HumanoidRootPart
-                local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                if onScreen and ESPConfig.Box then
-                    local size = (Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3, 0)).Y) * 0.75
-                    box.Size = Vector2.new(size * 1.5, size * 2)
-                    box.Position = Vector2.new(vector.X - box.Size.X / 2, vector.Y - box.Size.Y / 2)
-                    box.Color = ESPConfig.BoxColor
-                    box.Visible = true
+                if (hrp.Position - Camera.CFrame.Position).Magnitude > 0.5 then
+                    local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                    local vectorTop, onScreenTop = Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3, 0))
+                    local vectorBottom, onScreenBottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+                    
+                    -- 【关键修复】：确保所有参考点都在屏幕内侧(Z>0)，且尺寸必须是一个合法的有限数字，否则画框崩溃
+                    if onScreen and onScreenTop and onScreenBottom and ESPConfig.Box then
+                        local size = (vectorBottom.Y - vectorTop.Y) * 0.75
+                        if size == size and size > 0 and size < 5000 then 
+                            box.Size = Vector2.new(size * 1.5, size * 2)
+                            box.Position = Vector2.new(vector.X - box.Size.X / 2, vector.Y - box.Size.Y / 2)
+                            box.Color = ESPConfig.BoxColor
+                            box.Visible = true
+                        else
+                            box.Visible = false
+                        end
+                    else
+                        box.Visible = false
+                    end
                 else
                     box.Visible = false
                 end
@@ -231,23 +243,38 @@ if Tabs.Visuals then
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") then
                 local hrp = player.Character.HumanoidRootPart
                 local humanoid = player.Character.Humanoid
-                local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                if onScreen and ESPConfig.Health then
-                    local height = (Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3, 0)).Y) * 0.75
-                    healthBar.Background.Size = Vector2.new(4, height)
-                    healthBar.Background.Position = Vector2.new(vector.X - (height * 1.5 / 2) - 8, vector.Y - height)
-                    healthBar.Background.Visible = true
+                if (hrp.Position - Camera.CFrame.Position).Magnitude > 0.5 then
+                    local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                    local vectorTop, onScreenTop = Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3, 0))
+                    local vectorBottom, onScreenBottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
                     
-                    local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
-                    healthBar.Bar.Size = Vector2.new(2, height * healthPercent)
-                    healthBar.Bar.Position = Vector2.new(vector.X - (height * 1.5 / 2) - 7, vector.Y - height + (height * (1 - healthPercent)))
-                    healthBar.Bar.Color = ESPConfig.HealthColor
-                    healthBar.Bar.Visible = true
-                    
-                    healthBar.Percentage.Text = math.floor(healthPercent * 100) .. "%"
-                    healthBar.Percentage.Position = Vector2.new(vector.X - (height * 1.5 / 2) - 8, vector.Y - height - 15)
-                    healthBar.Percentage.Color = ESPConfig.HealthColor
-                    healthBar.Percentage.Visible = true
+                    if onScreen and onScreenTop and onScreenBottom and ESPConfig.Health then
+                        local height = (vectorBottom.Y - vectorTop.Y) * 0.75
+                        if height == height and height > 0 and height < 5000 then
+                            healthBar.Background.Size = Vector2.new(4, height)
+                            healthBar.Background.Position = Vector2.new(vector.X - (height * 1.5 / 2) - 8, vector.Y - height)
+                            healthBar.Background.Visible = true
+                            
+                            local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+                            healthBar.Bar.Size = Vector2.new(2, height * healthPercent)
+                            healthBar.Bar.Position = Vector2.new(vector.X - (height * 1.5 / 2) - 7, vector.Y - height + (height * (1 - healthPercent)))
+                            healthBar.Bar.Color = ESPConfig.HealthColor
+                            healthBar.Bar.Visible = true
+                            
+                            healthBar.Percentage.Text = math.floor(healthPercent * 100) .. "%"
+                            healthBar.Percentage.Position = Vector2.new(vector.X - (height * 1.5 / 2) - 8, vector.Y - height - 15)
+                            healthBar.Percentage.Color = ESPConfig.HealthColor
+                            healthBar.Percentage.Visible = true
+                        else
+                            healthBar.Background.Visible = false
+                            healthBar.Bar.Visible = false
+                            healthBar.Percentage.Visible = false
+                        end
+                    else
+                        healthBar.Background.Visible = false
+                        healthBar.Bar.Visible = false
+                        healthBar.Percentage.Visible = false
+                    end
                 else
                     healthBar.Background.Visible = false
                     healthBar.Bar.Visible = false
@@ -438,10 +465,13 @@ if Tabs.clickbot then
     local function CheckWallClear(targetPos, targetModel)
         if not QWQ_SilentAim_WallCheck then return true end 
         local origin = Camera.CFrame.Position
+        local dir = targetPos - origin
+        if dir.Magnitude < 0.1 then return true end 
+
         local rayParams = RaycastParams.new()
         rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera, targetModel}
         rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-        return workspace:Raycast(origin, targetPos - origin, rayParams) == nil
+        return workspace:Raycast(origin, dir, rayParams) == nil
     end
 
     local function GetTargetPartFast(char, aimPart)
@@ -453,6 +483,14 @@ if Tabs.clickbot then
     end
 
     RunService.RenderStepped:Connect(function()
+        local localChar = LocalPlayer.Character
+        if not localChar or not localChar:FindFirstChild("Humanoid") or localChar.Humanoid.Health <= 0 then
+            CurrentTargetHitbox = nil
+            CurrentTargetPos = nil
+            if TracerLine.Visible then TracerLine.Visible = false end
+            return
+        end
+
         if not QWQ_SilentAim_Enabled then
             if TracerLine.Visible then TracerLine.Visible = false end
             return
@@ -510,55 +548,53 @@ if Tabs.clickbot then
         end
     end)
 
-    local sharedParams = RaycastParams.new()
-    pcall(function() sharedParams.FilterType = Enum.RaycastFilterType.Include end)
-    pcall(function() sharedParams.FilterType = Enum.RaycastFilterType.Whitelist end)
-
-    local isHooking = false 
     local oldNamecall
     oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
         local method = getnamecallmethod()
-        if not QWQ_SilentAim_Enabled or checkcaller() or isHooking then
+        
+        -- 【关键修复 1】：过滤系统摄像机和防穿模射线，防止走路视角卡死
+        local callingScript = getcallingscript()
+        if callingScript then
+            local scriptName = string.lower(callingScript.Name)
+            if string.find(scriptName, "camera") or string.find(scriptName, "popper") then
+                return oldNamecall(self, ...)
+            end
+        end
+
+        local localChar = LocalPlayer.Character
+        if not localChar or not localChar:FindFirstChild("Humanoid") or localChar.Humanoid.Health <= 0 then
+            return oldNamecall(self, ...)
+        end
+
+        if not QWQ_SilentAim_Enabled or checkcaller() then
             return oldNamecall(self, ...)
         end
 
         local args = {...}
 
         if method == "Raycast" and self == workspace then
-            if CurrentTargetHitbox and CurrentTargetPos then
+            -- 【关键修复 2】：确保目标模型依然存在于世界上，防止访问野指针导致崩溃
+            if CurrentTargetHitbox and CurrentTargetHitbox:IsDescendantOf(workspace) and CurrentTargetPos then
                 local origin = args[1]
                 local direction = args[2]
                 if typeof(origin) == "Vector3" and typeof(direction) == "Vector3" and direction.Magnitude > 15 then
                     local targetVector = CurrentTargetPos - origin
-                    -- 【修复核心】检查起始点和目标的距离，如果太近则跳过修改，防止返回 NaN 导致画面卡死
                     if targetVector.Magnitude > 0.1 then 
-                        isHooking = true 
-                        local newDirection = targetVector.Unit * direction.Magnitude
-                        args[2] = newDirection
-                        sharedParams.FilterDescendantsInstances = {CurrentTargetHitbox.Parent}
-                        args[3] = sharedParams
-                        
-                        local success, result = pcall(function() return oldNamecall(self, unpack(args)) end)
-                        isHooking = false 
-                        if success then return result end
+                        -- 【关键修复 3】：绝对不要覆盖游戏的 RaycastParams (args[3])，否则子弹会打穿自己或者掩体引发卡死
+                        args[2] = targetVector.Unit * direction.Magnitude
+                        return oldNamecall(self, unpack(args))
                     end
                 end
             end
         elseif (method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist") and self == workspace then
-            if CurrentTargetHitbox and CurrentTargetPos then
+            if CurrentTargetHitbox and CurrentTargetHitbox:IsDescendantOf(workspace) and CurrentTargetPos then
                 local ray = args[1]
                 if typeof(ray) == "Ray" and ray.Direction.Magnitude > 15 then
                     local targetVector = CurrentTargetPos - ray.Origin
-                    -- 【修复核心】同样进行距离安全检查
                     if targetVector.Magnitude > 0.1 then
-                        isHooking = true 
                         local newDirection = targetVector.Unit * ray.Direction.Magnitude
-                        local newRay = Ray.new(ray.Origin, newDirection)
-                        local success, part, pos, normal, material = pcall(function()
-                            return workspace:FindPartOnRayWithWhitelist(newRay, {CurrentTargetHitbox.Parent})
-                        end)
-                        isHooking = false 
-                        if success then return part, pos, normal, material end
+                        args[1] = Ray.new(ray.Origin, newDirection)
+                        return oldNamecall(self, unpack(args))
                     end
                 end
             end
