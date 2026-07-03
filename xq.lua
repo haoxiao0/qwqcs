@@ -5,8 +5,8 @@ if game.PlaceId ~= AllowedPlaceId then
     
     pcall(function()
         StarterGui:SetCore("SendNotification", {
-            Title = "nonono~",
-            Text = "这不是血区(⊙o⊙)！(脚本维修中)",
+            Title = "nonono！！%！&#",
+            Text = "这不是血区(⊙o⊙)！(脚本维修中)太难搞了，老是游戏崩掉",
             Icon = "rbxassetid://115393444625574",
             Duration = 5
         })
