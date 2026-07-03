@@ -190,7 +190,6 @@ if Tabs.Visuals then
                     local vectorTop, onScreenTop = Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3, 0))
                     local vectorBottom, onScreenBottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
                     
-                    -- 【关键修复】：确保所有参考点都在屏幕内侧(Z>0)，且尺寸必须是一个合法的有限数字，否则画框崩溃
                     if onScreen and onScreenTop and onScreenBottom and ESPConfig.Box then
                         local size = (vectorBottom.Y - vectorTop.Y) * 0.75
                         if size == size and size > 0 and size < 5000 then 
@@ -548,21 +547,19 @@ if Tabs.clickbot then
         end
     end)
 
+    local isHooking = false -- 【终极保险丝】：防止安卓端无限递归爆栈
     local oldNamecall
+    
     oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        
-        -- 【关键修复 1】：过滤系统摄像机和防穿模射线，防止走路视角卡死
-        local callingScript = getcallingscript()
-        if callingScript then
-            local scriptName = string.lower(callingScript.Name)
-            if string.find(scriptName, "camera") or string.find(scriptName, "popper") then
-                return oldNamecall(self, ...)
-            end
+        -- 如果钩子已经在运行了，直接放行，绝对不允许套娃调用！
+        if isHooking then 
+            return oldNamecall(self, ...) 
         end
 
-        local localChar = LocalPlayer.Character
-        if not localChar or not localChar:FindFirstChild("Humanoid") or localChar.Humanoid.Health <= 0 then
+        local method = getnamecallmethod()
+        
+        -- 最优先过滤：不是射线一律不管
+        if method ~= "Raycast" and method ~= "FindPartOnRay" and method ~= "FindPartOnRayWithIgnoreList" and method ~= "FindPartOnRayWithWhitelist" then
             return oldNamecall(self, ...)
         end
 
@@ -570,19 +567,31 @@ if Tabs.clickbot then
             return oldNamecall(self, ...)
         end
 
+        local localChar = LocalPlayer.Character
+        if not localChar or not localChar:FindFirstChild("Humanoid") or localChar.Humanoid.Health <= 0 then
+            return oldNamecall(self, ...)
+        end
+
         local args = {...}
 
         if method == "Raycast" and self == workspace then
-            -- 【关键修复 2】：确保目标模型依然存在于世界上，防止访问野指针导致崩溃
             if CurrentTargetHitbox and CurrentTargetHitbox:IsDescendantOf(workspace) and CurrentTargetPos then
                 local origin = args[1]
                 local direction = args[2]
                 if typeof(origin) == "Vector3" and typeof(direction) == "Vector3" and direction.Magnitude > 15 then
                     local targetVector = CurrentTargetPos - origin
                     if targetVector.Magnitude > 0.1 then 
-                        -- 【关键修复 3】：绝对不要覆盖游戏的 RaycastParams (args[3])，否则子弹会打穿自己或者掩体引发卡死
                         args[2] = targetVector.Unit * direction.Magnitude
-                        return oldNamecall(self, unpack(args))
+                        
+                        -- 【上锁】：开始调用底层函数前，锁上保险丝
+                        isHooking = true
+                        local success, result = pcall(function()
+                            return oldNamecall(self, unpack(args))
+                        end)
+                        -- 【解锁】：调用结束后解锁
+                        isHooking = false
+                        
+                        if success then return result end
                     end
                 end
             end
@@ -594,11 +603,20 @@ if Tabs.clickbot then
                     if targetVector.Magnitude > 0.1 then
                         local newDirection = targetVector.Unit * ray.Direction.Magnitude
                         args[1] = Ray.new(ray.Origin, newDirection)
-                        return oldNamecall(self, unpack(args))
+                        
+                        -- 【上锁】：同理，防爆栈
+                        isHooking = true
+                        local success, part, pos, normal, material = pcall(function()
+                            return oldNamecall(self, unpack(args))
+                        end)
+                        isHooking = false
+                        
+                        if success then return part, pos, normal, material end
                     end
                 end
             end
         end
+        
         return oldNamecall(self, ...)
     end))
     
