@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "5.8更新了自动扳机,反瞄准,键盘(和自动扳机一起的)",
+    SubTitle = "6.5(૮ ・ﻌ・ა)",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -14,19 +14,20 @@ local Window = Fluent:CreateWindow({
 
 
 local Tabs = {
-    Qwqe = Window:AddTab({ Title = "QwQ", Icon = "rbxassetid://6558374856" }),
-    Qwqa = Window:AddTab({ Title = "功能", Icon = "rbxassetid://6558374856" }),
-    Player = Window:AddTab({ Title = "人物", Icon = "rbxassetid://6558374856" }),
-    ESP = Window:AddTab({ Title = "ESP", Icon = "rbxassetid://6558374856" }),
-    NPC_ESP = Window:AddTab({ Title = "NPC.EPS", Icon = "rbxassetid://6558374856" }),
-    clickbot = Window:AddTab({ Title = "自动扳机", Icon = "rbxassetid://6558374856" }),
-    Aimbot = Window:AddTab({ Title = "自瞄", Icon = "rbxassetid://5205790785" }),
-    Teleport = Window:AddTab({ Title = "传送", Icon = "rbxassetid://6558374856" }),
-    FOV = Window:AddTab({ Title = "视角", Icon = "rbxassetid://6558374856" }),
-    HITBOX = Window:AddTab({ Title = "碰撞箱", Icon = "rbxassetid://6558374856" }),
-    World = Window:AddTab({ Title = "世界", Icon = "rbxassetid://6558374856" }),
-    Tool = Window:AddTab({ Title = "实用工具", Icon = "rbxassetid://6558374856" }),
-    Main = Window:AddTab({ Title = "测试功能", Icon = "rbxassetid://6558374856" }),
+    Qwqe = Window:AddTab({ Title = "QwQ", Icon = "rbxassetid://104508482519186" }),
+    Qwqa = Window:AddTab({ Title = "功能", Icon = "rbxassetid://104508482519186" }),
+    Player = Window:AddTab({ Title = "人物", Icon = "rbxassetid://104508482519186" }),
+    ESP = Window:AddTab({ Title = "ESP", Icon = "rbxassetid://104508482519186" }),
+    NPC_ESP = Window:AddTab({ Title = "NPC.EPS", Icon = "rbxassetid://104508482519186" }),
+    clickbot = Window:AddTab({ Title = "自动扳机", Icon = "rbxassetid://104508482519186" }),
+    Aimbot = Window:AddTab({ Title = "自瞄", Icon = "rbxassetid://104508482519186" }),
+    Teleport = Window:AddTab({ Title = "传送", Icon = "rbxassetid://104508482519186" }),
+    FOV = Window:AddTab({ Title = "视角", Icon = "rbxassetid://104508482519186" }),
+    HITBOX = Window:AddTab({ Title = "碰撞箱", Icon = "rbxassetid://104508482519186" }),
+    World = Window:AddTab({ Title = "世界", Icon = "rbxassetid://104508482519186" }),
+    Tool = Window:AddTab({ Title = "实用工具", Icon = "rbxassetid://104508482519186" }),
+    Interact = Window:AddTab({ Title = "互动(gj)", Icon = "rbxassetid://87761482164390" }),
+    Main = Window:AddTab({ Title = "测试功能", Icon = "rbxassetid://104508482519186" }),
 }
 
 local Players = game:GetService("Players")
@@ -3386,7 +3387,7 @@ if Tabs and Tabs.Player then
     Tabs.Player:AddSlider("QWQ_SpinBot_UniqueKey_SpeedSlider", {
         Title = "旋转速度",
         Min = 10,
-        Max = 400, -- 极限陀螺转速
+        Max = 4000, -- 极限陀螺转速
         Default = 20,
         Rounding = 0,
         Callback = function(QWQ_SpinBot_UI_SliderState)
@@ -4615,11 +4616,377 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
-UpdateSinglePlayerList()
-UpdateHitboxPlayerList()
-Players.PlayerAdded:Connect(UpdateSinglePlayerList)
-Players.PlayerRemoving:Connect(UpdateSinglePlayerList)
 
+
+-- ==========================================================
+-- 互动、触发、触碰系统 (完美适配 Fluent 版)
+-- ==========================================================
+if Tabs and Tabs.Interact then
+    Tabs.Interact:AddSection("核心机制")
+
+    local QWQ_Interact_ToggleInteract = Tabs.Interact:AddToggle("QWQ_Interact_ToggleInteract", { Title = "可互动 (ProximityPrompt/Click)", Default = false })
+    local QWQ_Interact_ToggleTrigger = Tabs.Interact:AddToggle("QWQ_Interact_ToggleTrigger", { Title = "可触发 (模拟触碰触发器)", Default = false })
+    local QWQ_Interact_ToggleTouch = Tabs.Interact:AddToggle("QWQ_Interact_ToggleTouch", { Title = "可触碰 (TouchInterest)", Default = false })
+
+    Tabs.Interact:AddSection("范围与可视化")
+    local QWQ_Interact_Range = 20
+    local QWQ_Interact_Shape = "圆形距离"
+
+    Tabs.Interact:AddInput("QWQ_Interact_RangeInput", {
+        Title = "范围半径 (距离)",
+        Default = "20",
+        Numeric = true,
+        Finished = false,
+        Placeholder = "输入数字...",
+        Callback = function(v) QWQ_Interact_Range = tonumber(v) or 20 end
+    })
+
+    Tabs.Interact:AddDropdown("QWQ_Interact_ShapeDropdown", {
+        Title = "范围形状",
+        Values = {"圆形距离", "正方形距离"},
+        Multi = false,
+        Default = 1,
+        Callback = function(v) QWQ_Interact_Shape = v end
+    })
+
+    local QWQ_Interact_VisualizerToggle = Tabs.Interact:AddToggle("QWQ_Interact_VisualizerToggle", { Title = "显示范围可视化", Default = false })
+    local QWQ_Interact_VisualizerColor = Tabs.Interact:AddColorpicker("QWQ_Interact_VisualizerColor", {
+        Title = "范围颜色",
+        Default = Color3.fromRGB(0, 255, 150)
+    })
+
+    Tabs.Interact:AddSection("执行控制")
+    local QWQ_Interact_ExecPerSec = 5
+    Tabs.Interact:AddSlider("QWQ_Interact_ExecPerSec", {
+        Title = "自动执行频率 (次/秒)",
+        Default = 5,
+        Min = 1,
+        Max = 60,
+        Rounding = 1,
+        Callback = function(v) QWQ_Interact_ExecPerSec = v end
+    })
+
+    local QWQ_Interact_AutoExecute = Tabs.Interact:AddToggle("QWQ_Interact_AutoExecute", { Title = "开启自动执行", Default = false })
+
+    -- 悬浮按钮设置
+    local QWQ_Interact_QuickBtnToggle = Tabs.Interact:AddToggle("QWQ_Interact_QuickBtnToggle", { Title = "显示悬浮快捷执行按钮", Default = false })
+    local QWQ_Interact_QuickBtnColor = Tabs.Interact:AddColorpicker("QWQ_Interact_QuickBtnColor", {
+        Title = "快捷执行按钮颜色",
+        Default = Color3.fromRGB(255, 255, 255)
+    })
+
+    -- 核心逻辑函数
+    local function IsInRange(partPos, hrpPos)
+        if QWQ_Interact_Shape == "圆形距离" then
+            return (partPos - hrpPos).Magnitude <= QWQ_Interact_Range
+        else
+            local diff = partPos - hrpPos
+            return math.abs(diff.X) <= QWQ_Interact_Range and math.abs(diff.Y) <= QWQ_Interact_Range and math.abs(diff.Z) <= QWQ_Interact_Range
+        end
+    end
+
+    local function ExecuteActions()
+        local touchCount, promptCount, clickCount = 0, 0, 0
+        local character = LocalPlayer.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return 0, 0, 0 end
+
+        local interactOn = Options.QWQ_Interact_ToggleInteract.Value
+        local triggerOn = Options.QWQ_Interact_ToggleTrigger.Value
+        local touchOn = Options.QWQ_Interact_ToggleTouch.Value
+
+        if not (interactOn or triggerOn or touchOn) then return 0, 0, 0 end
+
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            local isPart = obj:IsA("BasePart")
+            local isPrompt = obj:IsA("ProximityPrompt")
+            local isClick = obj:IsA("ClickDetector")
+
+            if isPart or isPrompt or isClick then
+                local targetPos = nil
+                if isPart then
+                    targetPos = obj.Position
+                elseif (isPrompt or isClick) and obj.Parent and obj.Parent:IsA("BasePart") then
+                    targetPos = obj.Parent.Position
+                end
+
+                if targetPos and IsInRange(targetPos, hrp.Position) then
+                    if interactOn then
+                        if isPrompt and fireproximityprompt then
+                            fireproximityprompt(obj, 1)
+                            promptCount = promptCount + 1
+                        elseif isClick and fireclickdetector then
+                            fireclickdetector(obj, 1)
+                            clickCount = clickCount + 1
+                        end
+                    end
+
+                    if (touchOn or triggerOn) and isPart and obj:FindFirstChildWhichIsA("TouchTransmitter") then
+                        if firetouchinterest then
+                            task.spawn(function()
+                                firetouchinterest(hrp, obj, 0)
+                                task.wait()
+                                firetouchinterest(hrp, obj, 1)
+                            end)
+                            touchCount = touchCount + 1
+                        end
+                    end
+                end
+            end
+        end
+        return touchCount, promptCount, clickCount
+    end
+
+local function ExecuteAndNotify()
+        local touches, prompts, clicks = ExecuteActions()
+        
+        -- 使用 pcall 保护原生弹窗，防止个别游戏禁用核心UI导致报错
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "已执行一次",
+                Text = string.format("触碰: %d | 互动: %d | 点击: %d", touches, prompts, clicks),
+                Icon = "rbxassetid://112498001988193",
+                Duration = 3
+            })
+        end)
+    end
+    Tabs.Interact:AddButton({
+        Title = "点击执行一次",
+        Description = "立即扫描范围并触发一次",
+        Callback = function()
+            ExecuteAndNotify()
+        end
+    })
+
+    -- ==========================================
+    -- 独立可拖动悬浮按钮 UI (防报错版)
+    -- ==========================================
+    local function GetSafeUI()
+        if gethui then
+            local s, r = pcall(gethui)
+            if s and r then return r end
+        end
+        local s, r = pcall(function() return game:GetService("CoreGui") end)
+        if s and r then return r end
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    local quickGui = Instance.new("ScreenGui")
+    quickGui.Name = "QWQ_Interact_QuickUI"
+    quickGui.ResetOnSpawn = false
+    quickGui.Parent = GetSafeUI()
+
+    local quickBtn = Instance.new("TextButton")
+    quickBtn.Size = UDim2.new(0, 30, 0, 20)
+    quickBtn.Position = UDim2.new(0, 10, 0, 10)
+    quickBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    quickBtn.Text = ""
+    quickBtn.AutoButtonColor = true
+    quickBtn.Visible = false
+    quickBtn.Parent = quickGui
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    btnCorner.Parent = quickBtn
+
+    local btnIcon = Instance.new("ImageLabel")
+    btnIcon.Size = UDim2.new(0.6, 0, 0.9, 0)
+    btnIcon.Position = UDim2.new(0.2, 0, 0.05, 0)
+    btnIcon.BackgroundTransparency = 1
+    btnIcon.Image = "rbxassetid://87761482164390" -- 标签图标
+    btnIcon.ScaleType = Enum.ScaleType.Fit
+    btnIcon.Parent = quickBtn
+
+    local dragging, dragInput, dragStart, startPos
+    quickBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = quickBtn.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    quickBtn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            quickBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    quickBtn.MouseButton1Click:Connect(function()
+        ExecuteAndNotify()
+    end)
+
+    QWQ_Interact_QuickBtnToggle:OnChanged(function()
+        quickBtn.Visible = Options.QWQ_Interact_QuickBtnToggle.Value
+    end)
+
+    QWQ_Interact_QuickBtnColor:OnChanged(function()
+        quickBtn.BackgroundColor3 = Options.QWQ_Interact_QuickBtnColor.Value
+    end)
+
+    -- ==========================================
+    -- 范围可视化系统 (安全退避版)
+    -- ==========================================
+    local secureFolder = Instance.new("Folder")
+    secureFolder.Name = "QWQ_Interact_Visualizer"
+    secureFolder.Parent = Camera -- 直接放在当前相机，防屏蔽且最稳妥
+
+    local sphereVisualizer = Instance.new("SphereHandleAdornment")
+    sphereVisualizer.ZIndex = 1
+    sphereVisualizer.AlwaysOnTop = true
+    sphereVisualizer.Transparency = 0.6
+    sphereVisualizer.Parent = secureFolder
+
+    local boxVisualizer = Instance.new("BoxHandleAdornment")
+    boxVisualizer.ZIndex = 1
+    boxVisualizer.AlwaysOnTop = true
+    boxVisualizer.Transparency = 0.6
+    boxVisualizer.Parent = secureFolder
+
+    RunService.RenderStepped:Connect(function()
+        local isEnabled = Options.QWQ_Interact_VisualizerToggle and Options.QWQ_Interact_VisualizerToggle.Value
+        local character = LocalPlayer.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+        if isEnabled and hrp then
+            local radius = QWQ_Interact_Range
+            local color = Options.QWQ_Interact_VisualizerColor and Options.QWQ_Interact_VisualizerColor.Value or Color3.fromRGB(0,255,150)
+            
+            if QWQ_Interact_Shape == "圆形距离" then
+                boxVisualizer.Visible = false
+                sphereVisualizer.Visible = true
+                sphereVisualizer.Adornee = hrp
+                sphereVisualizer.Radius = radius
+                sphereVisualizer.Color3 = color
+            else
+                sphereVisualizer.Visible = false
+                boxVisualizer.Visible = true
+                boxVisualizer.Adornee = hrp
+                boxVisualizer.Size = Vector3.new(radius * 2, radius * 2, radius * 2)
+                boxVisualizer.Color3 = color
+            end
+        else
+            sphereVisualizer.Visible = false
+            boxVisualizer.Visible = false
+            sphereVisualizer.Adornee = nil
+            boxVisualizer.Adornee = nil
+        end
+    end)
+
+    -- 自动执行任务循环
+    task.spawn(function()
+        while true do
+            if Options.QWQ_Interact_AutoExecute and Options.QWQ_Interact_AutoExecute.Value then
+                ExecuteActions()
+                task.wait(1 / QWQ_Interact_ExecPerSec)
+            else
+                task.wait(0.1)
+            end
+        end
+    end)
+end
+
+Tabs.Interact:AddSection("全图全自动互动")
+
+local autoLoopThread = nil
+local autoProxState = false
+local autoClickState = false
+local autoTouchState = false
+
+-- 【新增】专门用来备份每个 ProximityPrompt 原本互动时间的对照表
+local originalPromptDurations = {}
+
+-- 辅助函数：一键还原所有被修改过的 E 键互动时间
+local function restorePromptDurations()
+    for prompt, originalDuration in pairs(originalPromptDurations) do
+        pcall(function()
+            if prompt and prompt.Parent then
+                prompt.HoldDuration = originalDuration
+            end
+        end)
+    end
+    table.clear(originalPromptDurations) -- 还原后清空备份表
+end
+
+-- 全图循环扫描核心逻辑
+local function startAutoInteractLoop()
+    if autoLoopThread then return end
+    autoLoopThread = task.spawn(function()
+        local lastTouch = 0
+        while autoProxState or autoClickState or autoTouchState do
+            pcall(function()
+                local descendants = workspace:GetDescendants()
+                for i, obj in ipairs(descendants) do
+                    if i % 200 == 0 then task.wait() end -- 防卡死
+                    
+                    -- 【已修改】E键互动：改为“秒互动”模式，不再全图自动触发
+                    if autoProxState and obj:IsA("ProximityPrompt") then
+                        pcall(function()
+                            -- 如果这个E键以前没有被备份过时间，就记录它的原本长按时间
+                            if originalPromptDurations[obj] == nil then
+                                originalPromptDurations[obj] = obj.HoldDuration
+                            end
+                            -- 强行将长按时间改成 0（实现走过去按E直接秒开）
+                            obj.HoldDuration = 0
+                        end)
+                    end
+                    
+                    -- 点击互动
+                    if autoClickState and obj:IsA("ClickDetector") then
+                        task.spawn(fireclickdetector, obj)
+                    end
+                    
+                    -- 触碰互动（过滤致死）
+                    if autoTouchState and (tick() - lastTouch > 0.5) then
+                        if obj:IsA("TouchTransmitter") and obj.Parent and obj.Parent:IsA("BasePart") then
+                            local part = obj.Parent
+                            local nLower = string.lower(part.Name)
+                            if not string.find(nLower, "kill") and not string.find(nLower, "lava") and not string.find(nLower, "岩浆") then
+                                local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                if myRoot then
+                                    task.spawn(function()
+                                        firetouchinterest(myRoot, part, 0)
+                                        task.wait(0.01)
+                                        firetouchinterest(myRoot, part, 1)
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end
+                if autoTouchState then lastTouch = tick() end
+            end)
+            task.wait(1) -- 每秒轮巡一次
+        end
+        autoLoopThread = nil
+    end)
+end
+
+-- 添加 UI 控件开关
+Tabs.Interact:AddToggle("AutoProx_Toggle", {
+    Title = "本地E键秒互动 (无需长按)",
+    Description = "开启后靠近任何物品按E直接秒开，关闭后恢复原有交互时间",
+    Default = false,
+    Callback = function(v)
+        autoProxState = v
+        if v then 
+            startAutoInteractLoop() 
+            Fluent:Notify({Title = "秒互动已开启", Content = "现在靠近物品按E无需等待圈圈转完", Duration = 3})
+        else
+            -- 【核心逻辑】关闭开关时，立刻触发还原函数，并清空临时备份
+            restorePromptDurations()
+            Fluent:Notify({Title = "秒互动已关闭", Content = "所有交互已安全恢复原本的时间", Duration = 3})
+        end
+    end
+})
 
 
 Tabs.Tool:AddButton({
@@ -4715,355 +5082,10 @@ loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
 
 
 
-
-
-
-
-
-
-
-Tabs.Main:AddToggle("silent", {
-    Title = "子弹追踪",
-    Default = false,
-    Callback = function(value)
-        silent = value
-        if silent then
-        local CurrentCamera = workspace.CurrentCamera
-local Players = game.Players
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-function ClosestPlayer()
-    local MaxDist, Closest = math.huge
-    for I,V in pairs(Players.GetPlayers(Players)) do
-        if V == LocalPlayer then continue end
-        if V.Team == LocalPlayer then continue end
-        if not V.Character then continue end
-    local Head = V.Character.FindFirstChild(V.Character, "Head")
-        if not Head then continue end
-        local Pos, Vis = CurrentCamera.WorldToScreenPoint(CurrentCamera, Head.Position)
-        if not Vis then continue end
-        local MousePos, TheirPos = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y / 2), Vector2.new(Pos.X, Pos.Y)
-        local Dist = (TheirPos - MousePos).Magnitude
-        if Dist < MaxDist then
-            MaxDist = Dist
-            Closest = V
-        end
-    end
-    return Closest
-end
-local MT = getrawmetatable(game)
-local OldNC = MT.__namecall
-local OldIDX = MT.__index
-setreadonly(MT, false)
-MT.__namecall = newcclosure(function(self, ...)
-    local Args, Method = {...}, getnamecallmethod()
-    if Method == "FindPartOnRayWithIgnoreList" and not checkcaller() then
-        local CP = ClosestPlayer()
-        if CP and CP.Character and CP.Character.FindFirstChild(CP.Character, "Head") then
-            Args[1] = Ray.new(CurrentCamera.CFrame.Position, (CP.Character.Head.Position - CurrentCamera.CFrame.Position).Unit * 1000)
-            return OldNC(self, unpack(Args))
-        end
-    end
-    return OldNC(self, ...)
-end)
-MT.__index = newcclosure(function(self, K)
-    if K == "Clips" then
-        return workspace.Map
-    end
-    return OldIDX(self, K)
-end)
-setreadonly(MT, true)
-    else
-        local CurrentCamera = workspace.CurrentCamera
-local Players = game.Players
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-function ClosestPlayer()
-    local MaxDist, Closest = math.huge
-    for I,V in pairs(Players.GetPlayers(Players)) do
-        if V == LocalPlayer then continue end
-        if V.Team == LocalPlayer then continue end
-        if not V.Character then continue end
-        local Head = V.Character.FindFirstChild(V.Character, "Head")
-        if not Head then continue end
-        local Pos, Vis = CurrentCamera.WorldToScreenPoint(CurrentCamera, Head.Position)
-        if not Vis then continue end
-        local MousePos, TheirPos = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 0, workspace.CurrentCamera.ViewportSize.Y / 0), Vector2.new(Pos.X, Pos.Y)
-        local Dist = (TheirPos - MousePos).Magnitude
-        if Dist < MaxDist then
-            MaxDist = Dist
-            Closest = V
-        end
-    end
-    return Closest
-end
-local MT = getrawmetatable(game)
-local OldNC = MT.__namecall
-local OldIDX = MT.__index
-setreadonly(MT, false)
-MT.__namecall = newcclosure(function(self, ...)
-    local Args, Method = {...}, getnamecallmethod()
-    if Method == "FindPartOnRayWithIgnoreList" and not checkcaller() then
-        local CP = ClosestPlayer()
-        if CP and CP.Character and CP.Character.FindFirstChild(CP.Character, "Head") then
-            Args[1] = Ray.new(CurrentCamera.CFrame.Position, (CP.Character.Head.Position - CurrentCamera.CFrame.Position).Unit * 1000)
-            return OldNC(self, unpack(Args))
-        end
-    end
-    return OldNC(self, ...)
-end)
-MT.__index = newcclosure(function(self, K)
-    if K == "Clips" then
-        return workspace.Map
-    end
-    return OldIDX(self, K)
-end)
-setreadonly(MT, true)
-    end
-    end
-})
-
-local function getAllProximityPrompts() 
-    return workspace:GetDescendants() 
-end 
-
-local proximityInstantEnabled = false
-local proximityAutoEnabled = false
-local proximityHighlightEnabled = false
-local proximityTextEnabled = false
-local proximityOriginal = {}
-
-local clickUnlimitedEnabled = false
-local clickAutoEnabled = false
-local clickHighlightEnabled = false
-local clickTextEnabled = false
-local clickOriginal = {}
-
-local function setupProximityInstant(enable)
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") then
-            if enable then
-                if not proximityOriginal[obj] then
-                    proximityOriginal[obj] = {HoldDuration = obj.HoldDuration}
-                end
-                obj.HoldDuration = 0
-            else
-                if proximityOriginal[obj] then
-                    obj.HoldDuration = proximityOriginal[obj].HoldDuration
-                end
-            end
-        end
-    end
-end
-
-local function triggerAllProximity()
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") then
-            fireproximityprompt(obj)
-        end
-    end
-    Fluent:Notify({Title = "Proximity", Content = "已触发所有 Proximity Prompts", Duration = 5})
-end
-
-local function setupClickUnlimited(enable)
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("ClickDetector") then
-            if enable then
-                if not clickOriginal[obj] then
-                    clickOriginal[obj] = {MaxActivationDistance = obj.MaxActivationDistance}
-                end
-                obj.MaxActivationDistance = math.huge
-            else
-                if clickOriginal[obj] then
-                    obj.MaxActivationDistance = clickOriginal[obj].MaxActivationDistance
-                end
-            end
-        end
-    end
-end
-
-local function triggerAllClick()
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("ClickDetector") then
-            fireclickdetector(obj)
-        end
-    end
-    Fluent:Notify({Title = "Click", Content = "已触发所有 Click Detectors", Duration = 5})
-end
-
-local function getAllTouchParts()
-    local parts = {}
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.CanTouch then
-            table.insert(parts, obj)
-        end
-    end
-    return parts
-end
-
-local function triggerAllTouch()
-    local char = LocalPlayer.Character
-    if char then
-        local touchPart = char:FindFirstChildWhichIsA("BasePart")
-        if touchPart then
-            for _, part in ipairs(getAllTouchParts()) do
-                if part ~= touchPart then
-                    firetouchinterest(touchPart, part, 0)
-                    task.wait(0.01)
-                    firetouchinterest(touchPart, part, 1)
-                end
-            end
-        end
-    end
-    Fluent:Notify({Title = "Touch", Content = "已触发所有 Touch Interests", Duration = 5})
-end
-
-
 Tabs.Main:AddToggle("ProxInstant", {
     Title = "瞬时互动",
     Default = false,
     Callback = function(v) proximityInstantEnabled = v; setupProximityInstant(v) end
 })
-
-Tabs.Main:AddButton({
-    Title = "Proximity全图互动",
-    Description = "触发所有 Proximity Prompts",
-    Callback = triggerAllProximity
-})
-
-Tabs.Main:AddButton({
-    Title = "Click全图互动",
-    Description = "触发所有 Click Detectors",
-    Callback = triggerAllClick
-})
-
-Tabs.Main:AddButton({
-    Title = "Touch全图互动",
-    Description = "触发所有 Touch Interests",
-    Callback = triggerAllTouch
-})
-
--- ==========================================
--- 拼接到原有脚本的 Tabs.Main 栏目中（本地E键秒互动+恢复版）
--- ==========================================
-Tabs.Main:AddSection("全图全自动互动")
-
-local autoLoopThread = nil
-local autoProxState = false
-local autoClickState = false
-local autoTouchState = false
-
--- 【新增】专门用来备份每个 ProximityPrompt 原本互动时间的对照表
-local originalPromptDurations = {}
-
--- 辅助函数：一键还原所有被修改过的 E 键互动时间
-local function restorePromptDurations()
-    for prompt, originalDuration in pairs(originalPromptDurations) do
-        pcall(function()
-            if prompt and prompt.Parent then
-                prompt.HoldDuration = originalDuration
-            end
-        end)
-    end
-    table.clear(originalPromptDurations) -- 还原后清空备份表
-end
-
--- 全图循环扫描核心逻辑
-local function startAutoInteractLoop()
-    if autoLoopThread then return end
-    autoLoopThread = task.spawn(function()
-        local lastTouch = 0
-        while autoProxState or autoClickState or autoTouchState do
-            pcall(function()
-                local descendants = workspace:GetDescendants()
-                for i, obj in ipairs(descendants) do
-                    if i % 200 == 0 then task.wait() end -- 防卡死
-                    
-                    -- 【已修改】E键互动：改为“秒互动”模式，不再全图自动触发
-                    if autoProxState and obj:IsA("ProximityPrompt") then
-                        pcall(function()
-                            -- 如果这个E键以前没有被备份过时间，就记录它的原本长按时间
-                            if originalPromptDurations[obj] == nil then
-                                originalPromptDurations[obj] = obj.HoldDuration
-                            end
-                            -- 强行将长按时间改成 0（实现走过去按E直接秒开）
-                            obj.HoldDuration = 0
-                        end)
-                    end
-                    
-                    -- 点击互动
-                    if autoClickState and obj:IsA("ClickDetector") then
-                        task.spawn(fireclickdetector, obj)
-                    end
-                    
-                    -- 触碰互动（过滤致死）
-                    if autoTouchState and (tick() - lastTouch > 0.5) then
-                        if obj:IsA("TouchTransmitter") and obj.Parent and obj.Parent:IsA("BasePart") then
-                            local part = obj.Parent
-                            local nLower = string.lower(part.Name)
-                            if not string.find(nLower, "kill") and not string.find(nLower, "lava") and not string.find(nLower, "岩浆") then
-                                local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                                if myRoot then
-                                    task.spawn(function()
-                                        firetouchinterest(myRoot, part, 0)
-                                        task.wait(0.01)
-                                        firetouchinterest(myRoot, part, 1)
-                                    end)
-                                end
-                            end
-                        end
-                    end
-                end
-                if autoTouchState then lastTouch = tick() end
-            end)
-            task.wait(1) -- 每秒轮巡一次
-        end
-        autoLoopThread = nil
-    end)
-end
-
--- 添加 UI 控件开关
-Tabs.Main:AddToggle("AutoProx_Toggle", {
-    Title = "本地E键秒互动 (无需长按)",
-    Description = "开启后靠近任何物品按E直接秒开，关闭后恢复原有交互时间",
-    Default = false,
-    Callback = function(v)
-        autoProxState = v
-        if v then 
-            startAutoInteractLoop() 
-            Fluent:Notify({Title = "秒互动已开启", Content = "现在靠近物品按E无需等待圈圈转完", Duration = 3})
-        else
-            -- 【核心逻辑】关闭开关时，立刻触发还原函数，并清空临时备份
-            restorePromptDurations()
-            Fluent:Notify({Title = "秒互动已关闭", Content = "所有交互已安全恢复原本的时间", Duration = 3})
-        end
-    end
-})
-
-Tabs.Main:AddToggle("AutoClick_Toggle", {
-    Title = "自动触发全图 Click (点击)",
-    Default = false,
-    Callback = function(v)
-        autoClickState = v
-        if v then startAutoInteractLoop() end
-    end
-})
-
-Tabs.Main:AddToggle("AutoTouch_Toggle", {
-    Title = "自动触发全图 Touch (触碰)",
-    Description = "自动收取金币、踩传送阵等（已过滤岩浆致死方块）",
-    Default = false,
-    Callback = function(v)
-        autoTouchState = v
-        if v then startAutoInteractLoop() end
-    end
-})
-
-
-
-
-
---👍👍👍👍👍👍👍👍👍😈😈😈😈😈
-
 
 
