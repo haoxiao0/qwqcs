@@ -5060,6 +5060,13 @@ loadstring(game:HttpGet("https://pastebin.com/raw/equFq67v"))()
 })
 
 Tabs.Tool:AddButton({
+    Title = "图片播放器",
+    Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/topianbofanpi.lua"))()
+    end
+})
+
+Tabs.Tool:AddButton({
     Title = "阿尔宙斯子追",
     Callback = function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/JsYb666/Item/refs/heads/main/Arceus%E5%AD%90%E8%BF%BD"))()
