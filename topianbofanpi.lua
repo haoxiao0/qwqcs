@@ -29,7 +29,7 @@ local canDragImg = false
 local playTask = nil
 
 ---------------------------------------------------------
--- 1. 核心容器创建 (新增主 UI 白色描边)
+-- 1. 核心容器创建
 ---------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "HAOXIAO_ImagePlayer_GUI"
@@ -40,6 +40,7 @@ local ImageDisplayGui = Instance.new("ScreenGui")
 ImageDisplayGui.Name = "HAOXIAO_Display"
 ImageDisplayGui.Parent = CoreGui
 
+-- 图像缓存池容器 (ImageContainer)
 local ImageContainer = Instance.new("Frame")
 ImageContainer.Size = UDim2.new(0, 200, 0, 200)
 ImageContainer.Position = UDim2.new(0, 50, 1, -50)
@@ -68,7 +69,6 @@ MainBg.Parent = MainDraggable
 local MainBgCorner = Instance.new("UICorner", MainBg)
 MainBgCorner.CornerRadius = UDim.new(0, 5)
 
--- 【新增】主外部 UI 白色描边
 local MainBgStroke = Instance.new("UIStroke")
 MainBgStroke.Color = Color3.fromRGB(255, 255, 255)
 MainBgStroke.Thickness = 1
@@ -224,7 +224,7 @@ AcceptBtn.MouseButton1Click:Connect(function()
 end)
 
 ---------------------------------------------------------
--- 4. 侧边栏 UI (新增白色描边)
+-- 4. 侧边栏 UI
 ---------------------------------------------------------
 local SideUI = Instance.new("Frame")
 SideUI.Size = UDim2.new(0, 0, 0, 300)
@@ -237,7 +237,6 @@ SideUI.Visible = false
 SideUI.Parent = MainDraggable
 Instance.new("UICorner", SideUI).CornerRadius = UDim.new(0, 5)
 
--- 【新增】侧边栏白色描边保持统一
 local SideUIStroke = Instance.new("UIStroke")
 SideUIStroke.Color = Color3.fromRGB(255, 255, 255)
 SideUIStroke.Thickness = 1
@@ -296,7 +295,7 @@ SideMinBtn.MouseButton1Click:Connect(function()
 end)
 
 ---------------------------------------------------------
--- 5. 主内容区与模块工厂 (将模块宽度改为 140px)
+-- 5. 主内容区与模块工厂 (140px)
 ---------------------------------------------------------
 local ContentArea = Instance.new("Frame")
 ContentArea.Size = UDim2.new(1, 0, 1, -40)
@@ -319,7 +318,7 @@ ContentLayout.Parent = ContentScroll
 local function createModule(moduleType, text)
     local Mod = Instance.new("Frame")
     if moduleType == "Label" then
-        Mod.Size = UDim2.new(0, 140, 0, 20) -- 【修改】标签宽度变为 140px
+        Mod.Size = UDim2.new(0, 140, 0, 20)
         Mod.BackgroundTransparency = 1
         local Lbl = Instance.new("TextLabel")
         Lbl.Size = UDim2.new(1, 0, 1, 0)
@@ -330,7 +329,7 @@ local function createModule(moduleType, text)
         Lbl.Parent = Mod
         return Mod, Lbl
     else
-        Mod.Size = UDim2.new(0, 140, 0, 52) -- 【修改】功能模块宽度变为 140px
+        Mod.Size = UDim2.new(0, 140, 0, 52)
         Mod.BackgroundTransparency = 1
         local Stroke = Instance.new("UIStroke")
         Stroke.Color = Color3.fromRGB(255, 255, 255)
@@ -386,7 +385,7 @@ DispToggle.Parent = dispMod
 local speedMod = createModule("Slider", "播放速度 (30 FPS)")
 speedMod.Parent = ContentScroll
 local SpeedSliderBg = Instance.new("Frame")
-SpeedSliderBg.Size = UDim2.new(0, 115, 0, 4) -- 稍微调短配合140的宽度
+SpeedSliderBg.Size = UDim2.new(0, 115, 0, 4)
 SpeedSliderBg.Position = UDim2.new(0.5, -57.5, 0, 36)
 SpeedSliderBg.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 SpeedSliderBg.Parent = speedMod
@@ -428,7 +427,7 @@ SizeKnob.Parent = SizeSliderBg
 ContentScroll.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
 
 ---------------------------------------------------------
--- 6. 核心逻辑 
+-- 6. 核心逻辑 (纯本地实体缓存池，去除官方加载服务)
 ---------------------------------------------------------
 
 local function bindClick(btn, action)
@@ -508,6 +507,7 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
+-- 【修改】彻底清理旧的缓存池（当切换文件夹/图片时，清空里面的所有实体）
 local function stopPlayback()
     isPlaying = false
     if playTask then 
@@ -520,7 +520,7 @@ local function stopPlayback()
 end
 
 local function startFolderPlayback(folderPath)
-    stopPlayback()
+    stopPlayback() -- 先清空旧缓存
     isPlaying = true
     currentImageMode = "folder"
     
@@ -537,17 +537,19 @@ local function startFolderPlayback(folderPath)
     
     if #validImages == 0 then fileClickTitle.Text = "文件夹为空" return end
     
+    -- 【核心缓存池装填逻辑】把新文件夹的所有图片实体化，放入 ImageContainer
     local framePool = {}
     for _, imgPath in ipairs(validImages) do
         local img = Instance.new("ImageLabel")
         img.Size = UDim2.new(1, 0, 1, 0)
         img.BackgroundTransparency = 1
         if getcustomasset then img.Image = getcustomasset(imgPath) end
-        img.Visible = false
+        img.Visible = false -- 默认隐藏，等待轮播调用
         img.Parent = ImageContainer
         table.insert(framePool, img)
     end
     
+    -- 直接开启播放循环，纯靠切换可见性来实现 0 重载播放
     playTask = task.spawn(function()
         local idx = 1
         local lastIdx = 1
@@ -608,9 +610,10 @@ OpenSideBtn.MouseButton1Click:Connect(function()
                 startFolderPlayback(path)
             else
                 fileClickTitle.Text = "图片: " .. itemName
-                stopPlayback()
+                stopPlayback() -- 切换到单图时，同样清空旧缓存
                 currentImageMode = "single"
                 
+                -- 把单张图片装填进缓存池，并直接设为可见
                 local img = Instance.new("ImageLabel")
                 img.Size = UDim2.new(1, 0, 1, 0)
                 img.BackgroundTransparency = 1
@@ -671,5 +674,4 @@ makeSlider(SizeSliderBg, SizeKnob, 20, 800, function(val)
     ImageContainer.Size = UDim2.new(0, val, 0, val)
 end)
 
-print("HAOXIAO 播放器 - 140px模块 & 全局白边描边版 加载完毕！")
-
+print("HAOXIAO 播放器 - 纯净实体缓存池版 (已去除官方预加载) 加载完毕！")
