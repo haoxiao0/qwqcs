@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "6.5(૮ ・ﻌ・ა)",
+    SubTitle = "7.0(感谢使用~)",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -3397,6 +3397,106 @@ if Tabs and Tabs.Player then
 end
 
 
+-- ==========================================================
+-- 【人物栏目新增】：全局玩家物理层穿透隔离引擎 (防碰飞/默认开启)
+-- ==========================================================
+if Tabs and Tabs.Player then
+    Tabs.Player:AddSection("🛡️ 绝对物理防御")
+
+    -- 核心状态变量
+    local QWQ_NoCollidePlayers_Enabled = true -- ✨ 默认开启！
+    local QWQ_CollisionGroupName = "QWQ_AntiCollide_Group"
+    
+    local PhysicsService = game:GetService("PhysicsService")
+    local CollisionConnection = nil
+    local RespawnConnection = nil
+
+    -- 1. 初始化物理图层隔离环境
+    pcall(function()
+        -- 注册你的专属独立物理图层
+        PhysicsService:RegisterCollisionGroup(QWQ_CollisionGroupName)
+        -- 💡 核心算式：设置这个独立图层【不与自己碰撞】，同时【不与默认的 Default 图层碰撞】
+        -- 这样只要把你和其他玩家丢进去，你们之间就变成了完全透明的空气，永远不可能发生碰撞！
+        PhysicsService:CollisionGroupSetCollidable(QWQ_CollisionGroupName, QWQ_CollisionGroupName, false)
+        PhysicsService:CollisionGroupSetCollidable(QWQ_CollisionGroupName, "Default", false)
+    end)
+
+    -- 2. 将指定角色的所有部件强行灌入该物理隔离图层
+    local function SetCharacterNoCollision(character)
+        if not character then return end
+        pcall(function()
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    -- 改变它的碰撞组标签
+                    part.CollisionGroup = QWQ_NoCollidePlayers_Enabled and QWQ_CollisionGroupName or "Default"
+                end
+            end
+        end)
+    end
+
+    -- 3. 清理与重置函数
+    local function StopPlayerNoCollision()
+        if CollisionConnection then CollisionConnection:Disconnect() CollisionConnection = nil end
+        if RespawnConnection then RespawnConnection:Disconnect() RespawnConnection = nil end
+        
+        -- 恢复所有人（包括自己和全图玩家）的物理图层为默认
+        local char = LocalPlayer.Character
+        if char then SetCharacterNoCollision(char) end
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                SetCharacterNoCollision(player.Character)
+            end
+        end
+    end
+
+    -- 4. 驱动引擎函数
+    local function StartPlayerNoCollision()
+        StopPlayerNoCollision() -- 前置清洗
+
+        -- A. 处理全图已有玩家和新进玩家
+        local function managePlayer(player)
+            if player == LocalPlayer then return end
+            
+            if player.Character then SetCharacterNoCollision(player.Character) end
+            player.CharacterAdded:Connect(function(char)
+                task.wait(0.3) -- 等待骨骼和服装加载完毕
+                if QWQ_NoCollidePlayers_Enabled then SetCharacterNoCollision(char) end
+            end)
+        end
+
+        for _, player in ipairs(Players:GetPlayers()) do managePlayer(player) end
+        CollisionConnection = Players.PlayerAdded:Connect(managePlayer)
+
+        -- B. 处理你自己的本体角色（防重生后失效）
+        if LocalPlayer.Character then SetCharacterNoCollision(LocalPlayer.Character) end
+        RespawnConnection = LocalPlayer.CharacterAdded:Connect(function(char)
+            task.wait(0.3)
+            if QWQ_NoCollidePlayers_Enabled then SetCharacterNoCollision(char) end
+        end)
+    end
+
+    -- UI 开关绑定
+    Tabs.Player:AddToggle("QWQ_NoCollidePlayers_Toggle", {
+        Title = "全局玩家碰撞免役 (防原地碰飞)",
+        Description = "激活后你将直接穿透全图所有玩家本体，无论对方使用什么原地碰飞指令都对你无效。",
+        Default = true, -- ✨ 激活UI时默认就是绿色的开启状态
+        Callback = function(state)
+            QWQ_NoCollidePlayers_Enabled = state
+            if state then
+                StartPlayerNoCollision()
+                Fluent:Notify({Title = "绝对防御已启动", Content = "已剥离你与其他玩家的物理碰撞面！", Duration = 3})
+            else
+                StopPlayerNoCollision()
+                Fluent:Notify({Title = "绝对防御已解除", Content = "已恢复正常的玩家物理碰撞面。", Duration = 3})
+            end
+        end
+    })
+
+    -- 🌟 脚本首次加载时，自动触发初始化，达成“默认开启”
+    if QWQ_NoCollidePlayers_Enabled then
+        task.defer(StartPlayerNoCollision)
+    end
+end
 
 
 -- ==========================================
@@ -5056,13 +5156,6 @@ Tabs.Tool:AddButton({
     Title = "飞车",
     Callback = function()
 loadstring(game:HttpGet("https://pastebin.com/raw/equFq67v"))()
-    end
-})
-
-Tabs.Tool:AddButton({
-    Title = "图片播放器",
-    Callback = function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/topianbofanpi.lua"))()
     end
 })
 
