@@ -5588,11 +5588,11 @@ end
 if Mobile then
     local MinimizeButton = New("TextButton", {
         Parent = GUI,
-        Text = "QWQ",
+        Text = "TvT",
         BackgroundColor3 = Color3.fromRGB(185, 220, 225),
 	    BackgroundTransparency = 0,
 	    TextColor3 = Color3.new(255, 255, 255),
-	    Size = UDim2.new(0, 20, 0, 20),
+	    Size = UDim2.new(0, 25, 0, 25),
 	    Position = UDim2.new(0.85, 15, 0.2, -18),
 	    Active = true,
 	    Draggable = true
