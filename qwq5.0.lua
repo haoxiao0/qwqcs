@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.3(感谢使用~)(原来是防甩飞惹的祸)",
+    SubTitle = "7.2(感谢使用~)(更新了防甩飞)",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -3397,7 +3397,6 @@ if Tabs and Tabs.Player then
 end
 
 
-end
 
 
 -- ==========================================
