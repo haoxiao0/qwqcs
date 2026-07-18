@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.2(感谢使用~)(更新了防甩飞)",
+    SubTitle = "7.3(感谢使用~)(原来是防甩飞惹的祸)",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -3397,157 +3397,6 @@ if Tabs and Tabs.Player then
 end
 
 
--- ==========================================================
--- 【人物栏目新增】：图层隔离 + 横向向量熔断 + 智能地面托举 (防拉飞防陷地)
--- ==========================================================
-if Tabs and Tabs.Player then
-    Tabs.Player:AddSection("🛡️ 终极向量防御 (防陷地版)")
-
-    -- 核心状态变量
-    local QWQ_UltimateAntiFling_Enabled = true -- 默认开启
-    local QWQ_CollisionGroupName = "QWQ_AntiCollide_Group"
-    
-    local PhysicsService = game:GetService("PhysicsService")
-    local CollisionConnection = nil
-    local RespawnConnection = nil
-    local VelocityLockConnection = nil 
-
-    -- 1. 初始化物理图层隔离
-    pcall(function()
-        PhysicsService:RegisterCollisionGroup(QWQ_CollisionGroupName)
-        PhysicsService:CollisionGroupSetCollidable(QWQ_CollisionGroupName, QWQ_CollisionGroupName, false)
-        PhysicsService:CollisionGroupSetCollidable(QWQ_CollisionGroupName, "Default", false)
-    end)
-
-    local function SetCharacterNoCollision(character)
-        if not character then return end
-        pcall(function()
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CollisionGroup = QWQ_UltimateAntiFling_Enabled and QWQ_CollisionGroupName or "Default"
-                end
-            end
-        end)
-    end
-
-    -- 2. 清理机制
-    local function StopUltimateDefense()
-        if CollisionConnection then CollisionConnection:Disconnect() CollisionConnection = nil end
-        if RespawnConnection then RespawnConnection:Disconnect() RespawnConnection = nil end
-        if VelocityLockConnection then VelocityLockConnection:Disconnect() VelocityLockConnection = nil end
-        
-        local char = LocalPlayer.Character
-        if char then SetCharacterNoCollision(char) end
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                SetCharacterNoCollision(player.Character)
-            end
-        end
-    end
-
-    -- 3. 核心驱动引擎
-    local function StartUltimateDefense()
-        StopUltimateDefense() 
-
-        -- 【第一层防御：碰撞隔离】
-        local function managePlayer(player)
-            if player == LocalPlayer then return end
-            if player.Character then SetCharacterNoCollision(player.Character) end
-            player.CharacterAdded:Connect(function(char)
-                task.wait(0.3)
-                if QWQ_UltimateAntiFling_Enabled then SetCharacterNoCollision(char) end
-            end)
-        end
-        for _, player in ipairs(Players:GetPlayers()) do managePlayer(player) end
-        CollisionConnection = Players.PlayerAdded:Connect(managePlayer)
-
-        if LocalPlayer.Character then SetCharacterNoCollision(LocalPlayer.Character) end
-        RespawnConnection = LocalPlayer.CharacterAdded:Connect(function(char)
-            task.wait(0.3)
-            if QWQ_UltimateAntiFling_Enabled then SetCharacterNoCollision(char) end
-        end)
-
-        -- 【第二层防御：自适应横向熔断 + 地面托举机制】✨
-        local lastSafeY = 0 -- 实时记录一个安全的地面高度缓存
-
-        VelocityLockConnection = RunService.Heartbeat:Connect(function()
-            if not QWQ_UltimateAntiFling_Enabled then return end
-            
-            local char = LocalPlayer.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            
-            if hrp and hum and hum.Health > 0 then
-                local currentPos = hrp.Position
-                local currentVel = hrp.Velocity
-
-                -- 💡 状态判定：如果你在地面上正常走动，记录当前的高度作为安全锚定高度
-                if hum.FloorMaterial ~= Enum.Material.Air then
-                    lastSafeY = currentPos.Y
-                end
-
-                -- A. 自身异常速度熔断（防突发的大向量拉飞）
-                if currentVel.Magnitude > 80 or hrp.RotVelocity.Magnitude > 80 then
-                    -- 🌟 关键修正：保留原有的 Y 轴垂直速度（重力），只把横向 X 和 Z 的扯动速度强行归零！
-                    hrp.Velocity = Vector3.new(0, currentVel.Y, 0)
-                    hrp.RotVelocity = Vector3.new(0, 0, 0)
-                end
-                
-                -- B. 扫描附近是否有试图磁场强拉你的外挂玩家
-                local foundFlinger = false
-                for _, player in ipairs(Players:GetPlayers()) do
-                    if player ~= LocalPlayer and player.Character then
-                        local enemyHrp = player.Character:FindFirstChild("HumanoidRootPart")
-                        if enemyHrp then
-                            -- 如果对方处于疯狂旋转改向量状态，且在 15 米范围内
-                            if enemyHrp.Velocity.Magnitude > 100 or enemyHrp.RotVelocity.Magnitude > 100 then
-                                if (enemyHrp.Position - currentPos).Magnitude < 15 then
-                                    foundFlinger = true
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-
-                -- C. 核心托底保护：一旦被危险外挂贴脸，启动黄金防御 🌟
-                if foundFlinger then
-                    -- 1. 锁死一切非自主的横向位移速度，让他彻底拉不动你
-                    hrp.Velocity = Vector3.new(0, hrp.Velocity.Y, 0)
-                    hrp.RotVelocity = Vector3.new(0, 0, 0)
-
-                    -- 2. 🚨 【防陷地核心】检测你有没有掉进地底下。
-                    -- 如果你当前的高度，比刚才站在地面上的安全高度矮了 1.5 格以上，说明你正在陷下去！
-                    if (lastSafeY - currentPos.Y) > 1.5 then
-                        -- 强行用底层坐标改写，把你瞬间“捞上来”重新稳稳地踩在安全地面上！
-                        hrp.CFrame = CFrame.new(currentPos.X, lastSafeY, currentPos.Z)
-                        hrp.Velocity = Vector3.new(0, 0, 0) -- 捞上来后把陷地惯性重置
-                    end
-                end
-            end
-        end)
-    end
-
-    -- UI 开关绑定
-    Tabs.Player:AddToggle("QWQ_UltimateAntiFling_Toggle", {
-        Title = "全局玩家碰撞 + 向量熔断 (防拉飞防陷地)",
-        Description = "双层防御：横向锁定异常向量，并在受到恶意撞击时提供高频地面托举保护，防飞防陷地。",
-        Default = true,
-        Callback = function(state)
-            QWQ_UltimateAntiFling_Enabled = state
-            if state then
-                StartUltimateDefense()
-                Fluent:Notify({Title = "绝对防御已启动", Content = "已开启横向向量熔断与智能防陷地托举保护！", Duration = 3})
-            else
-                StopUltimateDefense()
-                Fluent:Notify({Title = "绝对防御已解除", Content = "已恢复原始物理状态。", Duration = 3})
-            end
-        end
-    })
-
-    if QWQ_UltimateAntiFling_Enabled then
-        task.defer(StartUltimateDefense)
-    end
 end
 
 
@@ -5239,5 +5088,4 @@ Tabs.Main:AddToggle("ProxInstant", {
     Default = false,
     Callback = function(v) proximityInstantEnabled = v; setupProximityInstant(v) end
 })
-
 
