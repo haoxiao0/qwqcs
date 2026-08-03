@@ -3,8 +3,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/h
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqui3.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "QWQ",
-    SubTitle = "7.2",
+    Title = "QWQ你敢把脚本给别人我弄死你",
+    SubTitle = "7.3(更新了死亡之后传送回死亡地点)",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -715,6 +715,105 @@ if Tabs and Tabs.Qwqa then
         end
     })
 end
+
+-- ==========================================
+-- [功能栏目] 重生后传送至死亡地点 模块 (纯净直连版)
+-- ==========================================
+local QWQ_DeathTP_Enabled = false
+local QWQ_DeathTP_Height = 0.1
+local QWQ_DeathTP_Retries = 3
+local QWQ_SavedDeathLocation = nil
+
+-- 0. 添加独立的小节标题
+Tabs.Qwqa:AddSection("📌 死亡回传机制")
+
+-- 1. 标签
+Tabs.Qwqa:AddParagraph({
+    Title = "*重生后传送至死亡地点^ω^ *",
+    Content = "记录死亡瞬间坐标，重生后自动尝试传送回该位置。"
+})
+
+-- 2. 开关
+local Toggle_DeathTP = Tabs.Qwqa:AddToggle("Toggle_DeathTP", {
+    Title = "开启死亡回传",
+    Default = false
+})
+
+Toggle_DeathTP:OnChanged(function()
+    QWQ_DeathTP_Enabled = Options.Toggle_DeathTP.Value
+end)
+
+-- 3. 传送高度输入框 (米/Studs)
+local Input_DeathTPHeight = Tabs.Qwqa:AddInput("Input_DeathTPHeight", {
+    Title = "抬高高度 (米)",
+    Default = "0.1",
+    Placeholder = "防止卡进方块，默认0.1",
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        local num = tonumber(Value)
+        if num then QWQ_DeathTP_Height = num end
+    end
+})
+
+-- 4. 传送尝试次数滑动条
+local Slider_DeathTPRetries = Tabs.Qwqa:AddSlider("Slider_DeathTPRetries", {
+    Title = "传送尝试次数",
+    Description = "防止单次传送被地图机制打断",
+    Default = 3,
+    Min = 1,
+    Max = 10,
+    Rounding = 0,
+    Callback = function(Value)
+        QWQ_DeathTP_Retries = Value
+    end
+})
+
+-- 核心逻辑
+local function SetupDeathListener(character)
+    if not character then return end
+    
+    task.spawn(function()
+        local humanoid = character:WaitForChild("Humanoid", 5)
+        local hrp = character:WaitForChild("HumanoidRootPart", 5)
+
+        if humanoid and hrp then
+            humanoid.Died:Connect(function()
+                if QWQ_DeathTP_Enabled then QWQ_SavedDeathLocation = hrp.Position end
+            end)
+            humanoid.HealthChanged:Connect(function(health)
+                if health <= 0 and QWQ_DeathTP_Enabled then QWQ_SavedDeathLocation = hrp.Position end
+            end)
+        end
+    end)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    SetupDeathListener(newCharacter)
+    
+    if QWQ_DeathTP_Enabled and QWQ_SavedDeathLocation then
+        task.spawn(function()
+            local hrp = newCharacter:WaitForChild("HumanoidRootPart", 5)
+            if hrp then
+                task.wait(0.5)
+                for i = 1, QWQ_DeathTP_Retries do
+                    if hrp and newCharacter:FindFirstChild("Humanoid") and newCharacter.Humanoid.Health > 0 then
+                        hrp.CFrame = CFrame.new(QWQ_SavedDeathLocation + Vector3.new(0, QWQ_DeathTP_Height, 0))
+                        task.wait(0.3)
+                    else
+                        break
+                    end
+                end
+            end
+            QWQ_SavedDeathLocation = nil
+        end)
+    end
+end)
+
+if LocalPlayer.Character then
+    SetupDeathListener(LocalPlayer.Character)
+end
+-- ==========================================
 
 
 
