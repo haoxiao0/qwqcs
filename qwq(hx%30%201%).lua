@@ -171,7 +171,7 @@ local hitboxSpecificPlayer
 
 
 Tabs.Qwqe:AddButton({
-    Title = "正在开发中的UI(hx)",
+    Title = "正在开发中的UI(hx)，别玩竞争对手和闪光容易踢出去，他们有射线检测那种太高级的就不要玩能玩（军械库）",
     Callback = function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugghhj_hugg/refs/heads/main/qwq%2520%25212%2534%2573%2597%2534"))()
     end
