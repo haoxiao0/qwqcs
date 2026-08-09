@@ -169,6 +169,14 @@ local hitboxTargetSpecific = false
 local hitboxSpecificPlayerName
 local hitboxSpecificPlayer
 
+
+Tabs.Qwqe:AddButton({
+    Title = "正在开发中的UI(hx)",
+    Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugghhj_hugg/refs/heads/main/qwq%2520%25212%2534%2573%2597%2534"))()
+    end
+})
+
 -- ==========================================
 -- QwQ栏目：自定义路径透视高亮功能 (10秒自动刷新版)
 -- ==========================================
