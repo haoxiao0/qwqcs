@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.4别玩竞争对手和闪光容易踢出去，有射线检测那种太高级的就不要玩能玩（军械库）",
+    SubTitle = "7.4子追别玩竞争对手和闪光容易踢出去，有射线检测那种太高级的就不要玩能玩（军械库）",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
