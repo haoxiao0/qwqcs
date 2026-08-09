@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.3(更新了死亡之后传送回死亡地点)禁止泄露",
+    SubTitle = "7.4别玩竞争对手和闪光容易踢出去，有射线检测那种太高级的就不要玩能玩（军械库）",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -171,7 +171,7 @@ local hitboxSpecificPlayer
 
 
 Tabs.Qwqe:AddButton({
-    Title = "正在开发中的UI(hx)，别玩竞争对手和闪光容易踢出去，他们有射线检测那种太高级的就不要玩能玩（军械库）",
+    Title = "正在开发中的UI(hx)",
     Callback = function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugghhj_hugg/refs/heads/main/qwq%2520%25212%2534%2573%2597%2534"))()
     end
