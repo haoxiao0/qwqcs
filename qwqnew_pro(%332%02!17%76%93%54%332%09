@@ -1,0 +1,4326 @@
+local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqui1.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqui2.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqui3.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "QWQ",
+    SubTitle = "7.5优化版",
+    TabWidth = 100,
+    Size = UDim2.fromOffset(450, 350),
+    Acrylic = true,
+    Theme = "Sunset",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+
+local Tabs = {
+    Qwqe = Window:AddTab({ Title = "开发者", Icon = "rbxassetid://104508482519186" }),
+    Qwqa = Window:AddTab({ Title = "功能", Icon = "rbxassetid://104508482519186" }),
+    Player = Window:AddTab({ Title = "人物", Icon = "rbxassetid://104508482519186" }),
+    ESP = Window:AddTab({ Title = "ESP1", Icon = "rbxassetid://104508482519186" }),
+    NPC_ESP = Window:AddTab({ Title = "EPS2", Icon = "rbxassetid://104508482519186" }),
+    Aimbot = Window:AddTab({ Title = "自瞄", Icon = "rbxassetid://104508482519186" }),
+    Teleport = Window:AddTab({ Title = "传送", Icon = "rbxassetid://104508482519186" }),
+    Qwqr = Window:AddTab({ Title = "定点传送", Icon = "rbxassetid://104508482519186" }),
+    FOV = Window:AddTab({ Title = "视角", Icon = "rbxassetid://104508482519186" }),
+    HITBOX = Window:AddTab({ Title = "碰撞箱", Icon = "rbxassetid://104508482519186" }),
+    World = Window:AddTab({ Title = "世界", Icon = "rbxassetid://104508482519186" }),
+    Interact = Window:AddTab({ Title = "互动(gj)", Icon = "rbxassetid://87761482164390" }),
+}
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
+local Options = Fluent.Options
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local Camera = Workspace.CurrentCamera
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalizationService = game:GetService("LocalizationService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local lplr = game.Players.LocalPlayer
+local lplr = Players.LocalPlayer
+
+local platform = nil
+local savedPositions = {}
+local soundMuted = false
+local autoCollectEnabled = false
+local autoCollectRange = 20
+local characterScale = 1
+local freeCamEnabled = false
+local soundBoost = 1
+local zoomEnabled = false
+local fullBrightEnabled = false
+local superSprintEnabled = false
+local hitboxEnabled = false
+local hitboxSize = 5
+local hitboxTransparency = 0.7
+local hitboxColor = Color3.fromRGB(255, 0, 0)
+local hitbox_original_properties = {}
+local modifyConnection = nil
+local flingFrequency = 0.3
+local isFlinging = false
+local lightBrightness = 1
+local lightRange = 150
+local lightColor = Color3.fromRGB(255, 255, 255)
+
+--ESP
+local ESP = {
+    Boxes = {},
+    Rays = {},
+    Highlights = {},
+    HealthBars = {},
+    Names = {},
+    Distances = {},
+    Coords = {}
+}
+
+--传送变量
+local isTeleporting = false
+local targetPlayerName = nil
+local targetPlayer = nil
+local teleportFrequency = 0.01
+local lastTeleportTime = 0
+local teleportOnDeath = false
+local teleportDistance = 5
+local teleportDirection = "中"
+local lastPlatform = nil
+local isCircling = false
+local circleAngle = 0
+local circleSpeed = 1
+local isSpectating = false
+local spectateConnection = nil
+local isFlinging = false
+local flingPower = 100
+local lastFlingTime = 0
+local flingFrequency = 0.05
+local suctionConnection = nil
+local suctionEnabled = false
+local suctionOffset = Vector3.new(-3, 0, 0)
+local originalStates = {}
+
+--Aimbot变量
+local GlobalAimbotEnabled = false
+local SingleAimbotEnabled = false
+local AimbotTeamCheck = false
+local AimbotWallCheck = true
+local AimbotFOVRadius = 100
+local AimbotSmoothness = 0.4
+local AimbotRainbowFOV = false
+local AimbotFOVColor = Color3.fromRGB(0, 255, 0)
+local AimbotTargetPart = "HumanoidRootPart"
+local targetSinglePlayer = nil
+local targetSinglePlayerName = nil
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+
+local AimbotBlacklistEnabled = false
+local AimbotBlacklist = {}
+local targetAddName = ""
+local targetRemoveName = ""
+
+-- 动态刷新黑名单下拉列表的函数
+local function UpdateBlacklistDropdown()
+    local list = #AimbotBlacklist > 0 and AimbotBlacklist or {"无玩家"}
+    if Options.BlacklistListDropdown then
+        Options.BlacklistListDropdown:SetValues(list)
+        if #AimbotBlacklist > 0 and not table.find(AimbotBlacklist, Options.BlacklistListDropdown.Value) then
+            Options.BlacklistListDropdown:SetValue(AimbotBlacklist[1])
+        elseif #AimbotBlacklist == 0 then
+            Options.BlacklistListDropdown:SetValue("无玩家")
+        end
+    end
+end
+
+
+
+
+
+
+Tabs.Qwqe:AddButton({
+    Title = "正在开发中的UI(hx)",
+    Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugghhj_hugg/refs/heads/main/qwq%2520%25212%2534%2573%2597%2534"))()
+    end
+})
+
+
+Tabs.Qwqe:AddParagraph({
+    Title = "路径透视高亮 (自动刷新版)",
+    Content = "输入物体或文件夹的完整路径。开启后将每隔 10 秒自动扫描一次，自动为新刷出的物体套上透视。\n例如: workspace.Map.Chests"
+})
+
+local HighlightInput = Tabs.Qwqe:AddInput("HighlightPathInput", {
+    Title = "目标路径",
+    Default = "workspace",
+    Placeholder = "请输入完整的路径...",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
+        -- 仅用来接收输入
+    end
+})
+
+-- 用一个表格来存我们生成的高亮外框，方便随时删除
+local activeHighlights = {}
+local highlightThread = nil -- 用来控制10秒循环的线程句柄
+
+local function clearCustomHighlights()
+    for _, hl in ipairs(activeHighlights) do
+        if hl and hl.Parent then
+            hl:Destroy()
+        end
+    end
+    table.clear(activeHighlights)
+end
+
+Tabs.Qwqe:AddToggle("HighlightPathToggle", {
+    Title = "透视高亮开关",
+    Default = false,
+    Callback = function(state)
+        if state then
+            -- 开启前先清理掉旧的
+            clearCustomHighlights()
+            
+            -- 【核心升级】利用 task.spawn 创建一个独立的后台循环线程
+            highlightThread = task.spawn(function()
+                local isFirstRun = true -- 标记是否是第一次运行
+                
+                while true do
+                    local pathStr = Options.HighlightPathInput.Value
+                    
+                    -- 解析路径
+                    local success, targetInst = pcall(function()
+                        local func = loadstring("return " .. pathStr)
+                        return func and func() or nil
+                    end)
+
+                    if success and typeof(targetInst) == "Instance" then
+                        local items = targetInst:GetDescendants()
+                        table.insert(items, targetInst) 
+                        
+                        local newAddedCount = 0
+                        for _, obj in ipairs(items) do
+                            if obj:IsA("BasePart") or obj:IsA("Model") then
+                                -- 【关键优化】只对没有CustomHighlight标记的新物体进行高亮，防止重复创建导致掉帧和闪烁
+                                if not obj:FindFirstChild("CustomHighlight") then
+                                    local hl = Instance.new("Highlight")
+                                    hl.Name = "CustomHighlight"
+                                    hl.FillColor = Color3.fromRGB(0, 255, 128) -- 薄荷绿
+                                    hl.FillTransparency = 0.6
+                                    hl.OutlineColor = Color3.fromRGB(255, 255, 255) -- 白色外框
+                                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                    hl.Parent = obj
+                                    
+                                    table.insert(activeHighlights, hl)
+                                    newAddedCount = newAddedCount + 1
+                                end
+                            end
+                        end
+                        
+                        -- 智能弹窗提示逻辑
+                        if isFirstRun then
+                            Fluent:Notify({Title = "透视已开启", Content = "已启动10秒自动巡检。初始高亮了 " .. newAddedCount .. " 个物体", Duration = 4})
+                            isFirstRun = false
+                        elseif newAddedCount > 0 then
+                            -- 只有在后续真正检测到新物品刷出来时，才会弹窗提醒你
+                            Fluent:Notify({Title = "检测到新物体", Content = "全图巡检自动为 " .. newAddedCount .. " 新物体加上透视+1", Duration = 3})
+                        end
+                    else
+                        -- 首次运行如果路径输错了就直接关闭
+                        if isFirstRun then
+                            Fluent:Notify({Title = "错误", Content = "路径解析失败！请检查拼写是否正确。", Duration = 4})
+                            Options.HighlightPathToggle:SetValue(false)
+                            break
+                        end
+                    end
+                    
+                    -- 完美的10秒等待延迟
+                    task.wait(10)
+                end
+            end)
+        else
+            -- 【核心升级】关闭开关时，强制掐断、销毁这个10秒的后台循环线程
+            if highlightThread then
+                task.cancel(highlightThread)
+                highlightThread = nil
+            end
+            -- 一键删除所有残留的高亮框
+            clearCustomHighlights()
+        end
+    end
+})
+-- ==========================================
+
+Tabs.Qwqe:AddSection("自定义路径：吸物与触碰")
+
+Tabs.Qwqe:AddInput("ItemPathInput", {
+    Title = "目标物品/文件夹路径",
+    Default = "workspace",
+    Placeholder = "例如: workspace.Map.Drops",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
+        -- 仅用于接收输入
+    end
+})
+
+-- 辅助函数：将字符串路径安全解析为游戏内的 Instance 对象
+local function getInstanceFromPath(pathStr)
+    local success, targetInst = pcall(function()
+        local func = loadstring("return " .. pathStr)
+        return func and func() or nil
+    end)
+    if success and typeof(targetInst) == "Instance" then
+        return targetInst
+    end
+    return nil
+end
+
+-- 按钮 1：移动单个指定物品到脚下
+Tabs.Qwqe:AddButton({
+    Title = "移动 [单个指定物品] 到脚下",
+    Description = "适用于路径指向的是某个具体的 Part 或 Model",
+    Callback = function()
+        local pathStr = Options.ItemPathInput.Value
+        local targetInst = getInstanceFromPath(pathStr)
+        
+        if targetInst then
+            local char = LocalPlayer.Character
+            local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+            if rootPart then
+                local feetCFrame = rootPart.CFrame * CFrame.new(0, -3, 0)
+                pcall(function()
+                    if targetInst:IsA("BasePart") then
+                        targetInst.CFrame = feetCFrame
+                    elseif targetInst:IsA("Model") then
+                        targetInst:PivotTo(feetCFrame)
+                    end
+                end)
+                Fluent:Notify({Title = "成功", Content = "已将 " .. targetInst.Name .. " 传送到脚下", Duration = 3})
+            end
+        else
+            Fluent:Notify({Title = "错误", Content = "路径解析失败或该物品不存在！", Duration = 3})
+        end
+    end
+})
+
+-- 按钮 2：批量移动文件夹内所有物品
+Tabs.Qwqe:AddButton({
+    Title = "批量移动 [文件夹内所有物品] 到脚下",
+    Description = "适用于路径指向的是包含大量掉落物的 Folder 或 Model",
+    Callback = function()
+        local pathStr = Options.ItemPathInput.Value
+        local targetInst = getInstanceFromPath(pathStr)
+        
+        if targetInst then
+            local char = LocalPlayer.Character
+            local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+            if rootPart then
+                local feetCFrame = rootPart.CFrame * CFrame.new(0, -3, 0)
+                local count = 0
+                
+                pcall(function()
+                    for _, obj in ipairs(targetInst:GetChildren()) do
+                        if obj:IsA("BasePart") then
+                            obj.CFrame = feetCFrame
+                            count = count + 1
+                        elseif obj:IsA("Model") then
+                            obj:PivotTo(feetCFrame)
+                            count = count + 1
+                        end
+                    end
+                end)
+                Fluent:Notify({Title = "批量成功", Content = "成功将 " .. count .. " 个物品吸取到脚下", Duration = 3})
+            end
+        else
+            Fluent:Notify({Title = "错误", Content = "路径解析失败或文件夹不存在！", Duration = 3})
+        end
+    end
+})
+
+-- 按钮 3：远程隔空触碰（破解防作弊专用）
+Tabs.Qwqe:AddButton({
+    Title = "隔空批量触碰 (防拦截推荐)",
+    Description = "如果吸过来捡不起来，用这个直接发送物理触碰包捡起",
+    Callback = function()
+        local pathStr = Options.ItemPathInput.Value
+        local targetInst = getInstanceFromPath(pathStr)
+        
+        if targetInst then
+            local char = LocalPlayer.Character
+            local myRoot = char and char:FindFirstChild("HumanoidRootPart")
+            if myRoot then
+                local count = 0
+                pcall(function()
+                    -- 同时支持传入的是单个物品，还是一个文件夹
+                    local items = targetInst:IsA("Folder") and targetInst:GetChildren() or targetInst:GetDescendants()
+                    table.insert(items, targetInst) -- 把自身也加进去测一下
+                    
+                    for _, obj in ipairs(items) do
+                        if obj:IsA("BasePart") and obj:FindFirstChildWhichIsA("TouchTransmitter") then
+                            firetouchinterest(myRoot, obj, 0)
+                            task.wait(0.01)
+                            firetouchinterest(myRoot, obj, 1)
+                            count = count + 1
+                        end
+                    end
+                end)
+                Fluent:Notify({Title = "触碰发送完毕", Content = "共向 " .. count .. " 个物品发送了触碰信号", Duration = 3})
+            end
+        else
+            Fluent:Notify({Title = "错误", Content = "路径解析失败或物体不存在！", Duration = 3})
+        end
+    end
+})
+
+local PerformanceGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+local FPSLabel = Instance.new("TextLabel")
+
+PerformanceGui.Name = "QWQ_Beautiful_HUD"
+PerformanceGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+PerformanceGui.ResetOnSpawn = false
+
+-- 面板靠右上角贴边，留出安全间距
+MainFrame.Parent = PerformanceGui
+MainFrame.BackgroundTransparency = 1
+MainFrame.Position = UDim2.new(1, -150, 0, 15)
+MainFrame.Size = UDim2.new(0, 135, 0, 30) -- 移除了Ping，高度由60缩减至30
+
+UIListLayout.Parent = MainFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+
+-- 统一的高级质感渲染函数
+local function configureLabel(label, order)
+    label.Size = UDim2.new(1, 0, 0, 24)
+    label.BackgroundTransparency = 0.25 -- 适度的半透明玻璃感
+    label.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- 深邃暗蓝底色
+    label.Font = Enum.Font.RobotoMono -- 极客感等宽字体
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.Visible = false
+    label.LayoutOrder = order
+    
+    -- 柔和外边框
+    local stroke = Instance.new("UIStroke", label)
+    stroke.Color = Color3.fromRGB(45, 45, 55)
+    stroke.Thickness = 1
+    
+    -- 圆角剪裁
+    local corners = Instance.new("UICorner", label)
+    corners.CornerRadius = UDim.new(0, 5)
+    
+    label.Parent = MainFrame
+end
+
+configureLabel(FPSLabel, 1)
+
+local fpsCount = 0
+local lastUpdateTime = os.clock()
+
+RunService.RenderStepped:Connect(function()
+    fpsCount = fpsCount + 1
+    local now = os.clock()
+    
+    if now - lastUpdateTime >= 0.2 then
+        
+        -- 计算并更新 FPS
+        local currentFps = math.floor(fpsCount / (now - lastUpdateTime))
+        FPSLabel.Text = "FPS: " .. currentFps
+        
+        -- 根据帧率健康度动态变色
+        if currentFps >= 55 then
+            FPSLabel.TextColor3 = Color3.fromRGB(90, 220, 140) -- 极佳：质感绿
+        elseif currentFps >= 35 then
+            FPSLabel.TextColor3 = Color3.fromRGB(240, 190, 90) -- 警告：温暖黄
+        else
+            FPSLabel.TextColor3 = Color3.fromRGB(240, 100, 100) -- 极差：警示红
+        end
+        
+        -- 重置计数器和时间
+        fpsCount = 0
+        lastUpdateTime = now
+    end
+end)
+
+
+Tabs.Qwqa:AddSection("屏幕贴边数据显示")
+
+Tabs.Qwqa:AddToggle("ShowFPS_Toggle", { 
+    Title = "显示帧率 (FPS)", 
+    Description = "屏幕右上角显示实时FPS", 
+    Default = false, 
+    Callback = function(v) FPSLabel.Visible = v end 
+})
+
+if Tabs and Tabs.Qwqa then
+    Tabs.Qwqa:AddSection("☁️ 踏空行走 (AirWalk)")
+
+    -- 核心状态与缓存
+    local QWQ_AirWalk_Enabled = false
+    local QWQ_AirWalk_Part = nil
+    local QWQ_AirWalk_Connection = nil
+    local QWQ_AirWalk_CurrentY = 0
+    local QWQ_AirWalk_Size = 8
+    local QWQ_AirWalk_Visible = false
+
+    -- 悬浮按钮状态缓存
+    local QWQ_MiniBtn_GUI = nil
+    local QWQ_MiniBtn = nil
+    local QWQ_MiniBtn_State = false -- false=红色(穿透下落) / true=青蓝色(凝冰托底)
+    local QWQ_MiniBtn_DragConnections = {}
+
+    -- 【安全核心】：安全获取 UI 容器 (防移动端注入器权限不足导致不弹UI)
+    local function GetSafeUIContainer()
+        if gethui then
+            local s, r = pcall(gethui)
+            if s and r then return r end
+        end
+        local s, r = pcall(function() return game:GetService("CoreGui") end)
+        if s and r then return r end
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    -- ==========================================
+    -- 1. 悬浮按钮销毁与创建逻辑
+    -- ==========================================
+    local function DestroyMiniButton()
+        if QWQ_MiniBtn_GUI then QWQ_MiniBtn_GUI:Destroy() QWQ_MiniBtn_GUI = nil end
+        QWQ_MiniBtn = nil
+        QWQ_MiniBtn_State = false
+        for _, conn in ipairs(QWQ_MiniBtn_DragConnections) do pcall(function() conn:Disconnect() end) end
+        table.clear(QWQ_MiniBtn_DragConnections)
+    end
+
+    local function CreateMiniButton()
+        DestroyMiniButton()
+
+        QWQ_MiniBtn_GUI = Instance.new("ScreenGui")
+        QWQ_MiniBtn_GUI.Name = "QWQ_AirWalk_MiniBtn"
+        QWQ_MiniBtn_GUI.Parent = GetSafeUIContainer() -- 使用安全容器
+        QWQ_MiniBtn_GUI.ResetOnSpawn = false
+        QWQ_MiniBtn_GUI.IgnoreGuiInset = true -- 无视屏幕刘海和顶栏遮挡
+
+        QWQ_MiniBtn = Instance.new("TextButton")
+        QWQ_MiniBtn.Parent = QWQ_MiniBtn_GUI
+        QWQ_MiniBtn.Size = UDim2.new(0, 25, 0, 25) -- 稍微放大至25px，防手机断触
+        -- 往左下方多移动一段距离，避开所有菜单键和排行榜
+        QWQ_MiniBtn.Position = UDim2.new(1, -120, 0, 120) 
+        QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- 初始红色(关闭托底，允许下落)
+        QWQ_MiniBtn.BorderSizePixel = 0
+        QWQ_MiniBtn.Text = ""
+        QWQ_MiniBtn.AutoButtonColor = false
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = QWQ_MiniBtn
+
+        -- 点击切换状态
+        QWQ_MiniBtn.Activated:Connect(function()
+            QWQ_MiniBtn_State = not QWQ_MiniBtn_State
+            if QWQ_MiniBtn_State then
+                -- 开启：青蓝色，平台恢复实体
+                QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+                if QWQ_AirWalk_Part then
+                    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then QWQ_AirWalk_CurrentY = hrp.Position.Y - 3.5 end -- 重新锁定当前高度
+                    QWQ_AirWalk_Part.CanCollide = true
+                    QWQ_AirWalk_Part.Transparency = QWQ_AirWalk_Visible and 0.5 or 1
+                end
+            else
+                -- 关闭：红色，平台隐藏并失去碰撞 (玩家下落)
+                QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+                if QWQ_AirWalk_Part then
+                    QWQ_AirWalk_Part.CanCollide = false
+                    QWQ_AirWalk_Part.Transparency = 1
+                end
+            end
+        end)
+
+        -- 拖拽逻辑
+        local dragging, dragStart, startPos = false, nil, nil
+        table.insert(QWQ_MiniBtn_DragConnections, QWQ_MiniBtn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true dragStart = input.Position startPos = QWQ_MiniBtn.Position
+            end
+        end))
+        table.insert(QWQ_MiniBtn_DragConnections, UserInputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                if dragging then
+                    local delta = input.Position - dragStart
+                    QWQ_MiniBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
+            end
+        end))
+        table.insert(QWQ_MiniBtn_DragConnections, UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end))
+    end
+
+    -- ==========================================
+    -- 2. 踏空行走底层逻辑
+    -- ==========================================
+    local function StopAirWalk()
+        if QWQ_AirWalk_Connection then
+            QWQ_AirWalk_Connection:Disconnect()
+            QWQ_AirWalk_Connection = nil
+        end
+        if QWQ_AirWalk_Part then
+            QWQ_AirWalk_Part:Destroy()
+            QWQ_AirWalk_Part = nil
+        end
+        DestroyMiniButton() -- 停止踏空时，一并销毁小按钮
+    end
+
+    local function StartAirWalk()
+        StopAirWalk() 
+        CreateMiniButton() -- 启动踏空时，生成小按钮
+        
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        
+        -- 即使是在死亡/加载状态开启功能，也能强行初始化平台
+        QWQ_AirWalk_CurrentY = hrp and (hrp.Position.Y - 3.5) or 0
+
+        QWQ_AirWalk_Part = Instance.new("Part")
+        QWQ_AirWalk_Part.Name = "QWQ_AirWalk_Platform"
+        QWQ_AirWalk_Part.Size = Vector3.new(QWQ_AirWalk_Size, 1, QWQ_AirWalk_Size)
+        QWQ_AirWalk_Part.Anchored = true
+        QWQ_AirWalk_Part.CanCollide = false -- 初始配合红色按钮，不碰撞
+        QWQ_AirWalk_Part.Transparency = 1
+        QWQ_AirWalk_Part.Material = Enum.Material.Neon
+        QWQ_AirWalk_Part.Color = Color3.fromRGB(135, 206, 235) 
+        QWQ_AirWalk_Part.Parent = workspace
+
+        QWQ_AirWalk_Connection = RunService.Heartbeat:Connect(function()
+            if not QWQ_AirWalk_Enabled or not QWQ_AirWalk_Part or not QWQ_AirWalk_Part.Parent then
+                StopAirWalk() return
+            end
+
+            local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if currentHrp then
+                -- 只有在小按钮开启(青蓝色)时，才进行阶梯高度运算
+                if QWQ_MiniBtn_State then
+                    local currentVelocityY = currentHrp.Velocity.Y
+                    if currentVelocityY > 0.5 then
+                        QWQ_AirWalk_Part.CFrame = CFrame.new(currentHrp.Position.X, QWQ_AirWalk_CurrentY, currentHrp.Position.Z)
+                    else
+                        if (currentHrp.Position.Y - 3.5) > QWQ_AirWalk_CurrentY + 0.5 then
+                            QWQ_AirWalk_CurrentY = currentHrp.Position.Y - 3.5
+                        end
+                        QWQ_AirWalk_Part.CFrame = CFrame.new(currentHrp.Position.X, QWQ_AirWalk_CurrentY, currentHrp.Position.Z)
+                    end
+                else
+                    -- 红色下落状态，平台只跟随XY，不提供任何高度支撑
+                    QWQ_AirWalk_Part.CFrame = CFrame.new(currentHrp.Position.X, currentHrp.Position.Y - 3.5, currentHrp.Position.Z)
+                end
+            end
+        end)
+    end
+
+    -- ==========================================
+    -- 3. UI 控件绑定 (现在绑定在 Tabs.Qwqa)
+    -- ==========================================
+    Tabs.Qwqa:AddToggle("QWQ_AirWalk_Toggle", {
+        Title = "开启 踏空行走",
+        Description = "生成快捷悬浮按钮：红色(下落) / 青蓝色(空中托底)",
+        Default = false,
+        Callback = function(state)
+            QWQ_AirWalk_Enabled = state
+            if state then
+                StartAirWalk()
+            else
+                StopAirWalk()
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddToggle("QWQ_AirWalk_Visible", {
+        Title = "显示透明脚踏板",
+        Description = "开启后，托底状态下能看到脚底的天蓝色判定光环",
+        Default = false,
+        Callback = function(state)
+            QWQ_AirWalk_Visible = state
+            if QWQ_AirWalk_Part and QWQ_MiniBtn_State then
+                QWQ_AirWalk_Part.Transparency = state and 0.5 or 1
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddSlider("QWQ_AirWalk_Size", {
+        Title = "平台安全面积",
+        Description = "如果经常漏脚掉下去，可以把面积调大一点",
+        Min = 3,
+        Max = 100,
+        Default = 8,
+        Rounding = 0,
+        Callback = function(value)
+            QWQ_AirWalk_Size = value
+            if QWQ_AirWalk_Part then
+                QWQ_AirWalk_Part.Size = Vector3.new(value, 1, value)
+            end
+        end
+    })
+end
+
+
+local success, err = pcall(function()
+    local QWQ_DeathTP_Enabled = false
+    local QWQ_DeathTP_Height = 0.1
+    local QWQ_DeathTP_Retries = 3
+    local QWQ_SavedDeathLocation = nil
+
+    -- 0. 添加独立的小节标题
+    Tabs.Qwqa:AddSection("死亡回传你敢把脚本泄露我弄死你")
+
+    -- 1. 标签
+    Tabs.Qwqa:AddParagraph({
+        Title = "重生后传送至死亡地点^ω^ ",
+        Content = "记录死亡瞬间坐标，重生后自动尝试传送回该位置。"
+    })
+
+    -- 2. 开关
+    local Toggle_DeathTP = Tabs.Qwqa:AddToggle("Toggle_DeathTP", {
+        Title = "开启回传",
+        Default = false
+    })
+
+    Toggle_DeathTP:OnChanged(function()
+        QWQ_DeathTP_Enabled = Options.Toggle_DeathTP.Value
+    end)
+
+    -- 3. 传送高度输入框 (米/Studs)
+    local Input_DeathTPHeight = Tabs.Qwqa:AddInput("Input_DeathTPHeight", {
+        Title = "抬高高度 (米)",
+        Default = "0.1",
+        Placeholder = "防止卡进方块，默认0.1",
+        Numeric = true,
+        Finished = true,
+        Callback = function(Value)
+            local num = tonumber(Value)
+            if num then QWQ_DeathTP_Height = num end
+        end
+    })
+
+    -- 4. 传送尝试次数滑动条
+    local Slider_DeathTPRetries = Tabs.Qwqa:AddSlider("Slider_DeathTPRetries", {
+        Title = "传送尝试次数",
+        Description = "防止单次传送被地图机制打断",
+        Default = 3,
+        Min = 1,
+        Max = 10,
+        Rounding = 0,
+        Callback = function(Value)
+            QWQ_DeathTP_Retries = Value
+        end
+    })
+
+    -- 核心逻辑
+    local function SetupDeathListener(character)
+        if not character then return end
+        
+        task.spawn(function()
+            local humanoid = character:WaitForChild("Humanoid", 5)
+            local hrp = character:WaitForChild("HumanoidRootPart", 5)
+
+            if humanoid and hrp then
+                humanoid.Died:Connect(function()
+                    if QWQ_DeathTP_Enabled then QWQ_SavedDeathLocation = hrp.Position end
+                end)
+                humanoid.HealthChanged:Connect(function(health)
+                    if health <= 0 and QWQ_DeathTP_Enabled then QWQ_SavedDeathLocation = hrp.Position end
+                end)
+            end
+        end)
+    end
+
+    LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+        SetupDeathListener(newCharacter)
+        
+        if QWQ_DeathTP_Enabled and QWQ_SavedDeathLocation then
+            task.spawn(function()
+                local hrp = newCharacter:WaitForChild("HumanoidRootPart", 5)
+                if hrp then
+                    task.wait(0.5)
+                    for i = 1, QWQ_DeathTP_Retries do
+                        if hrp and newCharacter:FindFirstChild("Humanoid") and newCharacter.Humanoid.Health > 0 then
+                            hrp.CFrame = CFrame.new(QWQ_SavedDeathLocation + Vector3.new(0, QWQ_DeathTP_Height, 0))
+                            task.wait(0.3)
+                        else
+                            break
+                        end
+                    end
+                end
+                QWQ_SavedDeathLocation = nil
+            end)
+        end
+    end)
+
+    if LocalPlayer.Character then
+        SetupDeathListener(LocalPlayer.Character)
+    end
+end)
+
+if not success then
+    warn("QWQ死亡回传模块报错: ", err)
+end
+
+-- 保持停留在第一个标签页防止白屏
+Window:SelectTab(1)
+-- ==========================================
+
+
+
+
+
+-- ==========================================================
+-- 【功能构建】：现代亚克力虚拟摇杆 + 独立跳跃键 (完美伪装PC版)
+-- ==========================================================
+if Tabs and Tabs.Qwqa then
+    Tabs.Qwqa:AddSection("🕹️ 虚拟摇杆与按键 (移动端高级移动辅助)")
+
+    -- 【安全核心】：安全获取 UI 容器
+    local function GetSafeUIContainer()
+        if gethui then
+            local s, r = pcall(gethui)
+            if s and r then return r end
+        end
+        local s, r = pcall(function() return game:GetService("CoreGui") end)
+        if s and r then return r end
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    -- 1. 创建独立 GUI 容器 (摇杆和跳跃键共用此容器，实现一键同开同关)
+    local DPadGui = GetSafeUIContainer():FindFirstChild("QWQ_Joystick_GUI")
+    if DPadGui then DPadGui:Destroy() end 
+    
+    DPadGui = Instance.new("ScreenGui")
+    DPadGui.Name = "QWQ_Joystick_GUI"
+    DPadGui.Parent = GetSafeUIContainer()
+    DPadGui.ResetOnSpawn = false
+    DPadGui.Enabled = false -- 初始隐藏
+
+    -- 核心动态尺寸变量
+    local BaseSize = 220
+    local KnobSize = math.floor(BaseSize * (2/5))
+    local LetterLabels = {} 
+    
+    local JumpBtnSize = 100
+    local JumpBtnDraggable = false
+
+    -- ==========================================
+    -- 摇杆模块构建
+    -- ==========================================
+    local JoystickBase = Instance.new("Frame")
+    JoystickBase.Name = "JoystickBase"
+    JoystickBase.Parent = DPadGui
+    JoystickBase.Size = UDim2.new(0, BaseSize, 0, BaseSize)
+    JoystickBase.AnchorPoint = Vector2.new(0, 1) 
+    JoystickBase.Position = UDim2.new(0, 60, 1, -60) 
+    JoystickBase.BackgroundColor3 = Color3.fromRGB(240, 240, 245) 
+    JoystickBase.BackgroundTransparency = 0.65 
+    JoystickBase.BorderSizePixel = 0
+    JoystickBase.Active = true
+
+    local BaseCorner = Instance.new("UICorner")
+    BaseCorner.CornerRadius = UDim.new(0, 30) 
+    BaseCorner.Parent = JoystickBase
+
+    local BaseStroke = Instance.new("UIStroke")
+    BaseStroke.Color = Color3.fromRGB(255, 255, 255)
+    BaseStroke.Transparency = 0.5
+    BaseStroke.Thickness = 1.5
+    BaseStroke.Parent = JoystickBase
+
+    -- 中心圆形分界线 (死区)
+    local DeadZoneRadius = BaseSize / 8
+    local DeadZoneCircle = Instance.new("Frame")
+    DeadZoneCircle.Size = UDim2.new(0, DeadZoneRadius * 2, 0, DeadZoneRadius * 2)
+    DeadZoneCircle.Position = UDim2.new(0.5, 0, 0.5, 0)
+    DeadZoneCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+    DeadZoneCircle.BackgroundTransparency = 1
+    DeadZoneCircle.ZIndex = 2
+    DeadZoneCircle.Parent = JoystickBase
+
+    local DeadZoneCorner = Instance.new("UICorner")
+    DeadZoneCorner.CornerRadius = UDim.new(1, 0)
+    DeadZoneCorner.Parent = DeadZoneCircle
+
+    local DeadZoneStroke = Instance.new("UIStroke")
+    DeadZoneStroke.Color = Color3.fromRGB(255, 255, 255)
+    DeadZoneStroke.Transparency = 0.6
+    DeadZoneStroke.Thickness = 1.5
+    DeadZoneStroke.Parent = DeadZoneCircle
+
+    -- 绘制方向字母
+    local function CreateLetter(text, pos)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1/3, 0, 1/3, 0)
+        label.Position = pos
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = Color3.fromRGB(220, 220, 220) 
+        label.TextTransparency = 0.2 
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = math.floor(BaseSize * 0.16) 
+        label.ZIndex = 1 
+        label.Parent = JoystickBase
+        table.insert(LetterLabels, label)
+    end
+    CreateLetter("W", UDim2.new(1/3, 0, 0, 0))       
+    CreateLetter("S", UDim2.new(1/3, 0, 2/3, 0))     
+    CreateLetter("A", UDim2.new(0, 0, 1/3, 0))       
+    CreateLetter("D", UDim2.new(2/3, 0, 1/3, 0))     
+
+    -- 中心摇杆球
+    local JoystickKnob = Instance.new("Frame")
+    JoystickKnob.Name = "JoystickKnob"
+    JoystickKnob.Parent = JoystickBase
+    JoystickKnob.Size = UDim2.new(0, KnobSize, 0, KnobSize)
+    JoystickKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+    JoystickKnob.Position = UDim2.new(0.5, 0, 0.5, 0) 
+    JoystickKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    JoystickKnob.BackgroundTransparency = 0.2 
+    JoystickKnob.BorderSizePixel = 0
+    JoystickKnob.ZIndex = 5 
+
+    local KnobCorner = Instance.new("UICorner")
+    KnobCorner.CornerRadius = UDim.new(1, 0) 
+    KnobCorner.Parent = JoystickKnob
+
+    local KnobStroke = Instance.new("UIStroke")
+    KnobStroke.Color = Color3.fromRGB(200, 200, 200)
+    KnobStroke.Transparency = 0.4
+    KnobStroke.Thickness = 2
+    KnobStroke.Parent = JoystickKnob
+
+    -- ==========================================
+    -- 跳跃键模块构建
+    -- ==========================================
+    local JumpButton = Instance.new("TextButton")
+    JumpButton.Name = "JumpButton"
+    JumpButton.Parent = DPadGui
+    JumpButton.Size = UDim2.new(0, JumpBtnSize, 0, JumpBtnSize)
+    JumpButton.AnchorPoint = Vector2.new(1, 1) -- 锚点设在右下角
+    JumpButton.Position = UDim2.new(1, -60, 1, -60) -- 初始靠右下方
+    JumpButton.BackgroundColor3 = Color3.fromRGB(240, 240, 245)
+    JumpButton.BackgroundTransparency = 0.65 -- 亚克力材质
+    JumpButton.BorderSizePixel = 0
+    -- 【修改】：添加向上的字符指示
+    JumpButton.Text = "▲\nJUMP"
+    JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JumpButton.TextTransparency = 0.3
+    JumpButton.Font = Enum.Font.SourceSansBold
+    JumpButton.TextSize = 22
+    JumpButton.AutoButtonColor = false
+    JumpButton.Active = true
+
+    local JumpCorner = Instance.new("UICorner")
+    JumpCorner.CornerRadius = UDim.new(1, 0) 
+    JumpCorner.Parent = JumpButton
+
+    local JumpStroke = Instance.new("UIStroke")
+    -- 【修改】：灰白色描边，透明度调整为与亚克力板同等 (0.65)
+    JumpStroke.Color = Color3.fromRGB(220, 220, 220)
+    JumpStroke.Transparency = 0.65
+    JumpStroke.Thickness = 1.5
+    JumpStroke.Parent = JumpButton
+
+    -- ==========================================
+    -- 动态 UI 刷新引擎
+    -- ==========================================
+    local function UpdateJoystickUI()
+        KnobSize = math.floor(BaseSize * (2/5))
+        local newDeadZoneRadius = BaseSize / 8
+
+        JoystickBase.Size = UDim2.new(0, BaseSize, 0, BaseSize)
+        DeadZoneCircle.Size = UDim2.new(0, newDeadZoneRadius * 2, 0, newDeadZoneRadius * 2)
+        JoystickKnob.Size = UDim2.new(0, KnobSize, 0, KnobSize)
+
+        for _, label in ipairs(LetterLabels) do
+            label.TextSize = math.floor(BaseSize * 0.16)
+        end
+    end
+
+    local function UpdateJumpBtnUI()
+        JumpButton.Size = UDim2.new(0, JumpBtnSize, 0, JumpBtnSize)
+        JumpButton.TextSize = math.floor(JumpBtnSize * 0.22)
+    end
+
+    -- ==========================================
+    -- 核心：底层物理键盘信号伪装引擎 (VIM)
+    -- ==========================================
+    local VIM = game:GetService("VirtualInputManager")
+    local activeKeys = {}
+    
+    local draggingJoystick = false
+    local dragInputJoystick = nil
+
+    local draggingJump = false
+    local dragInputJump = nil
+    local dragStartJump = nil
+    local startPosJump = nil
+
+    -- 释放所有按键 (摇杆+跳跃)
+    local function releaseAllKeys()
+        for key, _ in pairs(activeKeys) do
+            VIM:SendKeyEvent(false, key, false, game)
+        end
+        table.clear(activeKeys)
+        VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+    end
+
+    local function updateKeys(newKeys)
+        for key, _ in pairs(activeKeys) do
+            if not table.find(newKeys, key) then
+                VIM:SendKeyEvent(false, key, false, game)
+                activeKeys[key] = nil
+            end
+        end
+        for _, key in ipairs(newKeys) do
+            if not activeKeys[key] then
+                VIM:SendKeyEvent(true, key, false, game)
+                activeKeys[key] = true
+            end
+        end
+    end
+
+    -- 后台独立频闪掩码，防手机滑动判定
+    local function StartPCMaskingThread()
+        task.spawn(function()
+            while draggingJoystick do
+                pcall(function()
+                    VIM:SendKeyEvent(true, Enum.KeyCode.F15, false, game)
+                    task.wait(0.01)
+                    VIM:SendKeyEvent(false, Enum.KeyCode.F15, false, game)
+                end)
+                task.wait(0.2)
+            end
+        end)
+    end
+
+    -- 【摇杆事件】
+    local function handleJoystickInput(inputPosition)
+        local baseCenter = JoystickBase.AbsolutePosition + (JoystickBase.AbsoluteSize / 2)
+        local delta = Vector2.new(inputPosition.X, inputPosition.Y) - baseCenter
+
+        local maxVisualRadius = (BaseSize - KnobSize) / 2
+        local visualDelta = delta
+        if visualDelta.Magnitude > maxVisualRadius then
+            visualDelta = visualDelta.Unit * maxVisualRadius
+        end
+        
+        JoystickKnob.Position = UDim2.new(0.5, visualDelta.X, 0.5, visualDelta.Y)
+
+        local threshold = BaseSize / 10 
+        local targetKeys = {}
+
+        if delta.Y < -threshold then table.insert(targetKeys, Enum.KeyCode.W) end
+        if delta.Y > threshold then table.insert(targetKeys, Enum.KeyCode.S) end
+        if delta.X < -threshold then table.insert(targetKeys, Enum.KeyCode.A) end
+        if delta.X > threshold then table.insert(targetKeys, Enum.KeyCode.D) end
+
+        updateKeys(targetKeys)
+    end
+
+    JoystickBase.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingJoystick = true
+            dragInputJoystick = input
+            StartPCMaskingThread()
+            handleJoystickInput(input.Position)
+        end
+    end)
+
+    -- 【跳跃键事件】
+    JumpButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if JumpBtnDraggable then
+                -- 拖拽模式
+                draggingJump = true
+                dragInputJump = input
+                dragStartJump = input.Position
+                startPosJump = JumpButton.Position
+            else
+                -- 触发跳跃 (伪装电脑按 Space)
+                JumpButton.BackgroundTransparency = 0.4 
+                VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+            end
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            -- 摇杆滑动
+            if draggingJoystick and input == dragInputJoystick then
+                handleJoystickInput(input.Position)
+            end
+            -- 跳跃键拖拽
+            if draggingJump and input == dragInputJump and JumpBtnDraggable then
+                local delta = input.Position - dragStartJump
+                JumpButton.Position = UDim2.new(
+                    startPosJump.X.Scale, startPosJump.X.Offset + delta.X, 
+                    startPosJump.Y.Scale, startPosJump.Y.Offset + delta.Y
+                )
+            end
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        -- 摇杆松开
+        if input == dragInputJoystick then
+            draggingJoystick = false
+            dragInputJoystick = nil
+            releaseAllKeys()
+            game:GetService("TweenService"):Create(JoystickKnob, TweenInfo.new(0.2, Enum.EasingStyle.Bounce), {
+                Position = UDim2.new(0.5, 0, 0.5, 0)
+            }):Play()
+        end
+        -- 跳跃键松开
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if draggingJump and input == dragInputJump then
+                draggingJump = false
+                dragInputJump = nil
+            elseif not JumpBtnDraggable then
+                JumpButton.BackgroundTransparency = 0.65
+                VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+            end
+        end
+    end)
+
+
+    -- ==========================================
+    -- UI 控件绑定
+    -- ==========================================
+    
+    -- 【核心】：统一的主开关，同开同关
+    Tabs.Qwqa:AddToggle("QWQ_Joystick_Toggle", {
+        Title = "显示 虚拟摇杆与跳跃键",
+        Description = "开启后屏幕显示移动控制组件，向服务器强制发送物理键盘信号防识别",
+        Default = false,
+        Callback = function(state)
+            DPadGui.Enabled = state -- 控制总容器显示/隐藏
+            
+            -- 关闭时清理所有内存与状态
+            if not state then
+                draggingJoystick = false
+                dragInputJoystick = nil
+                draggingJump = false
+                dragInputJump = nil
+                releaseAllKeys()
+                JoystickKnob.Position = UDim2.new(0.5, 0, 0.5, 0)
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddToggle("QWQ_JumpBtn_Draggable", {
+        Title = "编辑跳跃键位置 (拖动模式)",
+        Description = "开启后拖动跳跃键调整位置；调整完毕后请关闭开关以恢复跳跃功能！",
+        Default = false,
+        Callback = function(state)
+            JumpBtnDraggable = state
+            if state then
+                JumpButton.Text = "拖动"
+                JumpButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+            else
+                JumpButton.Text = "▲\nJUMP"
+                JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddSlider("QWQ_Joystick_SizeSlider", {
+        Title = "摇杆大小 (左下角锚定)",
+        Min = 100,
+        Max = 400,
+        Default = 220,
+        Rounding = 0,
+        Callback = function(value)
+            BaseSize = value
+            UpdateJoystickUI()
+        end
+    })
+
+    Tabs.Qwqa:AddSlider("QWQ_JumpBtn_SizeSlider", {
+        Title = "跳跃键独立大小",
+        Min = 50,
+        Max = 200,
+        Default = 100,
+        Rounding = 0,
+        Callback = function(value)
+            JumpBtnSize = value
+            UpdateJumpBtnUI()
+        end
+    })
+
+    Tabs.Qwqa:AddColorpicker("QWQ_Joystick_ColorPicker", {
+        Title = "全局亚克力颜色",
+        Description = "统一更改底座与跳跃键的色调，完美保留玻璃高光与透明度",
+        Default = Color3.fromRGB(240, 240, 245),
+        Callback = function(value)
+            JoystickBase.BackgroundColor3 = value
+            JumpButton.BackgroundColor3 = value
+        end
+    })
+end
+
+Tabs.Qwqa:AddButton({
+    Title = "tp飞行",
+    Callback = function()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/tpfly.lua"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "飞行",
+    Callback = function()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/qwqfly2.0.lua"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "Delta键盘",
+    Callback = function()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/JsYb666/Item/refs/heads/main/delta%20keyboard.lua"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "功能道具",
+    Callback = function()
+loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/BTools.txt"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "死亡笔记",
+    Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/dingding123hhh/tt/main/%E6%AD%BB%E4%BA%A1%E7%AC%94%E8%AE%B0%20(1).txt"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "IY指令",
+    Callback = function()
+loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "踏空",
+    Callback = function()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/GhostPlayer352/Test4/main/Float'))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "删材质",
+    Callback = function()
+loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-FpsBoost-9260"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "点击传送工具",
+    Callback = function()
+mouse = game.Players.LocalPlayer:GetMouse() tool = Instance.new("Tool") tool.RequiresHandle = false tool.Name = "[FE] TELEPORT TOOL" tool.Activated:connect(function() local pos = mouse.Hit+Vector3.new(0,2.5,0) pos = CFrame.new(pos.X,pos.Y,pos.Z) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = pos end) tool.Parent = game.Players.LocalPlayer.Backpack
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "飞车",
+    Callback = function()
+loadstring(game:HttpGet("https://pastebin.com/raw/equFq67v"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "阿尔宙斯子追",
+    Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/JsYb666/Item/refs/heads/main/Arceus%E5%AD%90%E8%BF%BD"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "撸管R15",
+    Callback = function()
+loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "撸管R6",
+    Callback = function()
+loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+    end
+})
+
+
+
+Tabs.Qwqa:AddToggle("ProxInstant", {
+    Title = "瞬时互动",
+    Default = false,
+    Callback = function(v) proximityInstantEnabled = v; setupProximityInstant(v) end
+})
+
+
+
+
+
+
+
+
+local function isNumber(value)
+    return tonumber(value) ~= nil
+end
+
+Tabs.Player:AddSection("玩家加速")
+
+local speedEnabled = false
+local speedValue = 20          
+local speedMode = "Vector"     
+local originalWalkSpeed = nil  
+local speedConnection = nil
+
+local function disableSpeed()
+    if speedConnection then
+        speedConnection:Disconnect()
+        speedConnection = nil
+    end
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            if originalWalkSpeed then
+                LocalPlayer.Character.Humanoid.WalkSpeed = originalWalkSpeed
+            end
+        end
+    end)
+end
+
+local function updateOriginalWalkSpeed()
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            if not originalWalkSpeed then
+                originalWalkSpeed = LocalPlayer.Character.Humanoid.WalkSpeed
+            end
+        end
+    end)
+end
+
+local function enableSpeed()
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") or not LocalPlayer.Character:FindFirstChild("Humanoid") then
+        return
+    end
+
+    local humanoid = LocalPlayer.Character.Humanoid
+    local hrp = LocalPlayer.Character.HumanoidRootPart
+
+    updateOriginalWalkSpeed()
+
+    if speedConnection then speedConnection:Disconnect() end
+
+    if speedMode == "WalkSpeed" then
+        humanoid.WalkSpeed = speedValue
+
+    elseif speedMode == "Vector" then
+        speedConnection = RunService.Heartbeat:Connect(function()
+            if humanoid.MoveDirection.Magnitude > 0 then
+                local desiredVelocity = humanoid.MoveDirection * speedValue * 3.6
+                hrp.Velocity = Vector3.new(desiredVelocity.X, hrp.Velocity.Y, desiredVelocity.Z)
+            else
+                hrp.Velocity = Vector3.new(0, hrp.Velocity.Y, 0)
+            end
+        end)
+
+    elseif speedMode == "CFrame" then
+        speedConnection = RunService.Heartbeat:Connect(function(dt)
+            if humanoid.MoveDirection.Magnitude > 0 then
+                local moveOffset = humanoid.MoveDirection * speedValue * dt * 60
+                hrp.CFrame = hrp.CFrame + moveOffset
+            end
+        end)
+
+    elseif speedMode == "TP" then
+        speedConnection = RunService.Heartbeat:Connect(function(dt)
+            if humanoid.MoveDirection.Magnitude > 0 then
+                local distance = speedValue * dt * 55
+                hrp.CFrame = hrp.CFrame + (humanoid.MoveDirection * distance)
+            end
+        end)
+    end
+end
+
+Tabs.Player:AddToggle("SpeedEnabled", {
+    Title = "开启加速",
+    Default = false,
+    Callback = function(value)
+        speedEnabled = value
+        if value then
+            enableSpeed()
+        else
+            disableSpeed()
+        end
+    end
+})
+
+Tabs.Player:AddInput("SpeedValue", {
+    Title = "加速速度",
+    Default = "20",
+    Numeric = true,
+    Callback = function(value)
+        local num = tonumber(value)
+        if num then
+            speedValue = num
+            if speedEnabled and speedMode == "WalkSpeed" then
+                pcall(function()
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                        LocalPlayer.Character.Humanoid.WalkSpeed = num
+                    end
+                end)
+            end
+        end
+    end
+})
+
+Tabs.Player:AddDropdown("SpeedMode", {
+    Title = "加速模式",
+    Values = {"WalkSpeed", "Vector", "CFrame", "TP"},
+    Default = "Vector",
+    Callback = function(value)
+        speedMode = value
+        if speedEnabled then
+            disableSpeed()  
+            enableSpeed()   
+        end
+    end
+})
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    originalWalkSpeed = nil  
+    character:WaitForChild("Humanoid", 10)
+    character:WaitForChild("HumanoidRootPart", 10)
+    
+    updateOriginalWalkSpeed()  
+    
+    if speedEnabled then
+        task.wait(0.5)  
+        enableSpeed()   
+    else
+        pcall(function()
+            if character:FindFirstChild("Humanoid") and originalWalkSpeed then
+                character.Humanoid.WalkSpeed = originalWalkSpeed
+            end
+        end)
+    end
+end)
+
+if LocalPlayer.Character then
+    updateOriginalWalkSpeed()
+end
+
+Tabs.Player:AddSection("玩家跳跃")
+
+local jumpEnabled = false
+local jumpValue = 50           
+local jumpMode = "JumpPower"   
+local originalJumpPower = nil  
+local jumpConnection = nil
+
+local function disableJump()
+    if jumpConnection then
+        jumpConnection:Disconnect()
+        jumpConnection = nil
+    end
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            if originalJumpPower then
+                LocalPlayer.Character.Humanoid.JumpPower = originalJumpPower
+            end
+        end
+    end)
+end
+
+local function updateOriginalJumpPower()
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            if not originalJumpPower then
+                originalJumpPower = LocalPlayer.Character.Humanoid.JumpPower
+            end
+        end
+    end)
+end
+
+local function enableJump()
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") or not LocalPlayer.Character:FindFirstChild("Humanoid") then
+        return
+    end
+
+    local humanoid = LocalPlayer.Character.Humanoid
+    local hrp = LocalPlayer.Character.HumanoidRootPart
+
+    updateOriginalJumpPower()
+
+    if jumpConnection then jumpConnection:Disconnect() end
+
+    if jumpMode == "JumpPower" then
+        humanoid.JumpPower = jumpValue
+
+    elseif jumpMode == "Vector" then
+        jumpConnection = UserInputService.JumpRequest:Connect(function()
+            if humanoid:GetState() == Enum.HumanoidStateType.Freefall or humanoid:GetState() == Enum.HumanoidStateType.Jumping then
+                hrp.Velocity = Vector3.new(hrp.Velocity.X, jumpValue, hrp.Velocity.Z)
+            end
+        end)
+
+    elseif jumpMode == "CFrame" then
+        jumpConnection = UserInputService.JumpRequest:Connect(function()
+            if humanoid:GetState() == Enum.HumanoidStateType.Freefall or humanoid:GetState() == Enum.HumanoidStateType.Jumping then
+                hrp.CFrame = hrp.CFrame + Vector3.new(0, jumpValue, 0)
+            end
+        end)
+
+    elseif jumpMode == "Impulse" then
+        jumpConnection = UserInputService.JumpRequest:Connect(function()
+            if humanoid:GetState() == Enum.HumanoidStateType.Freefall or humanoid:GetState() == Enum.HumanoidStateType.Jumping then
+                hrp:ApplyImpulse(Vector3.new(0, humanoid.Mass * jumpValue, 0))
+            end
+        end)
+    end
+end
+
+Tabs.Player:AddToggle("JumpEnabled", {
+    Title = "开启跳跃增强",
+    Default = false,
+    Callback = function(value)
+        jumpEnabled = value
+        if value then
+            enableJump()
+        else
+            disableJump()
+        end
+    end
+})
+
+Tabs.Player:AddInput("JumpValue", {
+    Title = "跳跃高度",
+    Default = "50",
+    Numeric = true,
+    Callback = function(value)
+        local num = tonumber(value)
+        if num then
+            jumpValue = num
+            if jumpEnabled and jumpMode == "JumpPower" then
+                pcall(function()
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                        LocalPlayer.Character.Humanoid.JumpPower = num
+                    end
+                end)
+            end
+        end
+    end
+})
+
+Tabs.Player:AddDropdown("JumpMode", {
+    Title = "跳跃模式",
+    Values = {"JumpPower", "Vector", "CFrame", "Impulse"},
+    Default = "JumpPower",
+    Callback = function(value)
+        jumpMode = value
+        if jumpEnabled then
+            disableJump()  
+            enableJump()   
+        end
+    end
+})
+
+local infiniteJumpEnabled = false
+local infiniteJumpConnection = nil
+
+Tabs.Player:AddToggle("InfiniteJump", {
+    Title = "无限跳跃",
+    Default = false,
+    Callback = function(value)
+        infiniteJumpEnabled = value
+        if infiniteJumpConnection then
+            infiniteJumpConnection:Disconnect()
+            infiniteJumpConnection = nil
+        end
+        if value then
+            infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
+                pcall(function()
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                end)
+            end)
+        end
+    end
+})
+
+local QWQ_SpinBot_GlobalState_IsActive = false
+local QWQ_SpinBot_GlobalState_RotationSpeed = 20
+local QWQ_SpinBot_System_RenderStepConnection = nil
+local QWQ_SpinBot_System_CharacterAddedConnection = nil -- 替换为角色重生监听连接
+
+-- 独一无二的终止清理函数（只清理底层的连接，不影响 UI 开关状态）
+local function QWQ_SpinBot_CoreFunction_TerminateSpinning()
+    -- 强行熔断渲染层连接，确保 0 条垃圾代码驻留 CPU
+    if QWQ_SpinBot_System_RenderStepConnection then
+        QWQ_SpinBot_System_RenderStepConnection:Disconnect()
+        QWQ_SpinBot_System_RenderStepConnection = nil
+    end
+end
+
+-- 彻底关闭整个系统的函数（当手动关闭 UI 开关时调用）
+local function QWQ_SpinBot_CoreFunction_DisableEntirely()
+    QWQ_SpinBot_GlobalState_IsActive = false
+    QWQ_SpinBot_CoreFunction_TerminateSpinning()
+    
+    -- 断开重生监听
+    if QWQ_SpinBot_System_CharacterAddedConnection then
+        QWQ_SpinBot_System_CharacterAddedConnection:Disconnect()
+        QWQ_SpinBot_System_CharacterAddedConnection = nil
+    end
+end
+
+-- 独一无二的启动驱动函数
+local function QWQ_SpinBot_CoreFunction_InitializeSpinning()
+    QWQ_SpinBot_CoreFunction_TerminateSpinning() -- 前置清洗渲染连接，防止多次叠加物理层
+    
+    -- 极速自适应物理心跳循环
+    QWQ_SpinBot_System_RenderStepConnection = RunService.RenderStepped:Connect(function(QWQ_SpinBot_Runtime_DeltaTime)
+        if not QWQ_SpinBot_GlobalState_IsActive then return end
+        
+        local QWQ_SpinBot_Loop_Char = LocalPlayer.Character
+        if not QWQ_SpinBot_Loop_Char then return end
+        
+        local QWQ_SpinBot_Loop_Hrp = QWQ_SpinBot_Loop_Char:FindFirstChild("HumanoidRootPart")
+        local QWQ_SpinBot_Loop_Hum = QWQ_SpinBot_Loop_Char:FindFirstChild("Humanoid")
+        
+        -- 严格多重边界判定，防止对假死、无碰撞箱或换模组时的人物实体进行非法坐标运算
+        if QWQ_SpinBot_Loop_Hrp and QWQ_SpinBot_Loop_Hum and QWQ_SpinBot_Loop_Hum.Health > 0 then
+            QWQ_SpinBot_Loop_Hrp.CFrame = QWQ_SpinBot_Loop_Hrp.CFrame * CFrame.Angles(0, math.rad(QWQ_SpinBot_GlobalState_RotationSpeed * QWQ_SpinBot_Runtime_DeltaTime * 60), 0)
+        end
+    end)
+end
+
+-- 开启监听与注册函数
+local function QWQ_SpinBot_CoreFunction_StartSystem()
+    QWQ_SpinBot_CoreFunction_DisableEntirely() -- 全面初始化清洗
+    QWQ_SpinBot_GlobalState_IsActive = true
+    
+    -- 1. 针对当前已经存在的角色立即初始化一次
+    if LocalPlayer.Character then
+        QWQ_SpinBot_CoreFunction_InitializeSpinning()
+    end
+    
+    -- 2. 核心：监听重生。只要玩家复活，就会自动重新挂载旋转逻辑，不再关闭 UI 开关
+    QWQ_SpinBot_System_CharacterAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+        -- 稍微等待 Humanoid 加载，确保物理层完全就绪
+        newCharacter:WaitForChild("Humanoid", 5)
+        if QWQ_SpinBot_GlobalState_IsActive then
+            QWQ_SpinBot_CoreFunction_InitializeSpinning()
+        end
+    end)
+end
+
+-- ==========================================================
+-- 【UI构建】：防冲突独立索引化界面绑定
+-- ==========================================================
+if Tabs and Tabs.Player then
+    Tabs.Player:AddSection("玩家旋转")
+
+    -- 内部索引键（Key）全部更改为独一无二的名称，彻底断绝全局UI库的命名冲突
+    Tabs.Player:AddToggle("QWQ_SpinBot_UniqueKey_Toggle", {
+        Title = "开启玩家旋转",
+        Default = false,
+        Callback = function(QWQ_SpinBot_UI_ToggleState)
+            if QWQ_SpinBot_UI_ToggleState then
+                QWQ_SpinBot_CoreFunction_StartSystem()
+            else
+                QWQ_SpinBot_CoreFunction_DisableEntirely()
+            end
+        end
+    })
+
+    Tabs.Player:AddSlider("QWQ_SpinBot_UniqueKey_SpeedSlider", {
+        Title = "旋转速度",
+        Min = 10,
+        Max = 600,
+        Default = 20,
+        Rounding = 0,
+        Callback = function(QWQ_SpinBot_UI_SliderState)
+            QWQ_SpinBot_GlobalState_RotationSpeed = QWQ_SpinBot_UI_SliderState
+        end
+    })
+end
+
+Tabs.Player:AddSection("穿墙")
+
+local noclipState = false
+local noclipLoop = nil
+local PhysicsService = game:GetService("PhysicsService")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+
+pcall(function()
+    PhysicsService:RegisterCollisionGroup("NoclipGroup")
+    PhysicsService:CollisionGroupSetCollidable("NoclipGroup", "Default", false)
+end)
+
+local function applyNoclipGroup(state)
+    local char = LocalPlayer.Character
+    if char then
+        for _, child in ipairs(char:GetDescendants()) do
+            if child:IsA("BasePart") then
+                child.CollisionGroup = state and "NoclipGroup" or "Default"
+            end
+        end
+    end
+end
+
+Tabs.Player:AddToggle("Noclip_Toggle", {
+    Title = "基础穿墙 (动态每帧)",
+    Description = "通过每帧关闭身体碰撞实现穿墙（平滑、最常用）",
+    Default = false,
+    Callback = function(v)
+        noclipState = v
+        
+        if v then
+
+            noclipLoop = game:GetService("RunService").Stepped:Connect(function()
+                if not noclipState then
+                    if noclipLoop then noclipLoop:Disconnect() noclipLoop = nil end
+                    return
+                end
+                
+                local char = LocalPlayer.Character
+                if char then
+                    for _, obj in ipairs(char:GetDescendants()) do
+                        if obj:IsA("BasePart") then
+                            obj.CanCollide = false
+                        end
+                    end
+                end
+            end)
+            
+            Fluent:Notify({Title = "基础穿墙已开启", Content = "您现在可以自由穿过任何墙壁", Duration = 3})
+        else
+            if noclipLoop then
+                noclipLoop:Disconnect()
+                noclipLoop = nil
+            end
+            Fluent:Notify({Title = "基础穿墙已关闭", Content = "已恢复正常的物理碰撞", Duration = 3})
+        end
+    end
+})
+
+
+
+local function genRandomName()
+    local prefix = "qwq_"
+    local charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}|:<>?~-=[]"
+    local result = prefix
+    for i = 1, 46 do
+        local randIndex = math.random(1, #charset)
+        result = result .. string.sub(charset, randIndex, randIndex)
+    end
+    return result
+end
+
+-- ==========================================
+-- 🎨 核心：数值单位格式化 (K, M, B, L)
+-- ==========================================
+local function formatHealth(value)
+    if not value then return "0" end
+    if value >= 1e12 then return string.format("%.1fL", value / 1e12)
+    elseif value >= 1e9 then return string.format("%.1fB", value / 1e9)
+    elseif value >= 1e6 then return string.format("%.1fM", value / 1e6)
+    elseif value >= 1e3 then return string.format("%.1fK", value / 1e3)
+    else return tostring(math.floor(value)) end
+end
+
+-- ==========================================
+-- 📦 核心：原生 UI 容器初始化
+-- ==========================================
+local CoreGui = game:GetService("CoreGui")
+local SafeContainer = (gethui and gethui()) or CoreGui
+
+local MasterESPContainer = Instance.new("ScreenGui")
+MasterESPContainer.Name = genRandomName()
+MasterESPContainer.Parent = SafeContainer
+MasterESPContainer.IgnoreGuiInset = true
+MasterESPContainer.ResetOnSpawn = false
+
+local MacaronBlue = Color3.fromRGB(153, 204, 255)
+
+-- ==========================================
+-- 🟢 玩家 ESP 系统
+-- ==========================================
+local PlayerESP_Cache = {}
+
+local function createPlayerESP(player)
+    if player == LocalPlayer or PlayerESP_Cache[player] then return end
+
+    local data = {}
+    local container = Instance.new("Folder")
+    container.Name = genRandomName()
+    container.Parent = MasterESPContainer
+    data.Container = container
+
+    local box = Instance.new("Frame")
+    box.Name = genRandomName()
+    box.BackgroundTransparency = 1
+    box.Visible = false
+    box.Parent = container
+    local boxStroke = Instance.new("UIStroke", box)
+    boxStroke.Thickness = 2
+    data.Box = box
+    data.BoxStroke = boxStroke
+
+    local ray = Instance.new("Frame")
+    ray.Name = genRandomName()
+    ray.AnchorPoint = Vector2.new(0.5, 0.5)
+    ray.BorderSizePixel = 0
+    ray.Visible = false
+    ray.Parent = container
+    data.Ray = ray
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = genRandomName()
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0.1
+    highlight.Parent = SafeContainer
+    highlight.Enabled = false
+    data.Highlight = highlight
+
+    -- 名字显示 (调小字体至11)
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = genRandomName()
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Size = UDim2.new(0, 200, 0, 12)
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 11
+    nameLabel.TextColor3 = MacaronBlue
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.Visible = false
+    nameLabel.Parent = container
+    data.Name = nameLabel
+
+    -- 血量数值显示 (调小字体至10)
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Name = genRandomName()
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Size = UDim2.new(0, 200, 0, 12)
+    healthLabel.Font = Enum.Font.GothamBold
+    healthLabel.TextSize = 10
+    healthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    healthLabel.TextStrokeTransparency = 0
+    healthLabel.Visible = false
+    healthLabel.Parent = container
+    data.HealthText = healthLabel
+
+    -- 血量条背景 (加上圆角)
+    local healthBg = Instance.new("Frame")
+    healthBg.Name = genRandomName()
+    healthBg.BorderSizePixel = 0
+    healthBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    healthBg.Visible = false
+    healthBg.Parent = container
+    local bgCorner = Instance.new("UICorner", healthBg)
+    bgCorner.CornerRadius = UDim.new(1, 0)
+    data.HealthBg = healthBg
+
+    -- 血量条填充 (加上圆角)
+    local healthFill = Instance.new("Frame")
+    healthFill.Name = genRandomName()
+    healthFill.BorderSizePixel = 0
+    healthFill.Parent = healthBg
+    local fillCorner = Instance.new("UICorner", healthFill)
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    data.HealthFill = healthFill
+
+    -- 距离显示 (保持12字号)
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Name = genRandomName()
+    distLabel.BackgroundTransparency = 1
+    distLabel.Size = UDim2.new(0, 200, 0, 15)
+    distLabel.Font = Enum.Font.GothamBold
+    distLabel.TextSize = 12
+    distLabel.TextColor3 = MacaronBlue
+    distLabel.TextStrokeTransparency = 0
+    distLabel.Visible = false
+    distLabel.Parent = container
+    data.Dist = distLabel
+
+    PlayerESP_Cache[player] = data
+end
+
+local function removePlayerESP(player)
+    if PlayerESP_Cache[player] then
+        if PlayerESP_Cache[player].Container then PlayerESP_Cache[player].Container:Destroy() end
+        if PlayerESP_Cache[player].Highlight then PlayerESP_Cache[player].Highlight:Destroy() end
+        PlayerESP_Cache[player] = nil
+    end
+end
+
+-- ==========================================
+-- 🟢 玩家 UI 控件面板
+-- ==========================================
+Tabs.ESP:AddToggle("BoxESP", { Title = "方框透视", Default = false })
+Tabs.ESP:AddColorpicker("BoxColor", { Title = "方框颜色", Default = MacaronBlue })
+
+Tabs.ESP:AddToggle("RayESP", { Title = "射线透视", Default = false })
+Tabs.ESP:AddColorpicker("RayColor", { Title = "射线颜色", Default = MacaronBlue })
+
+Tabs.ESP:AddToggle("HighlightESP", { Title = "人物高亮", Default = false })
+Tabs.ESP:AddColorpicker("HighlightColor", { Title = "高亮颜色", Default = MacaronBlue })
+
+Tabs.ESP:AddToggle("HealthESP", { Title = "血量与血条透视", Default = false })
+Tabs.ESP:AddColorpicker("HealthBarColor", { Title = "血量条颜色", Default = Color3.fromRGB(0, 255, 128) })
+
+Tabs.ESP:AddToggle("NameESP", { Title = "名称透视", Default = false })
+Tabs.ESP:AddToggle("DistanceESP", { Title = "距离透视", Default = false })
+Tabs.ESP:AddColorpicker("TextColor", { Title = "文本统调颜色", Default = MacaronBlue })
+
+-- ==========================================
+-- 🟢 核心渲染循环
+-- ==========================================
+RunService.RenderStepped:Connect(function()
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+
+    for player, data in pairs(PlayerESP_Cache) do
+        local character = player.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        local hum = character and character:FindFirstChild("Humanoid")
+        
+        local isAlive = hrp and hum and hum.Health > 0
+
+        if data.Highlight then
+            if isAlive and Options.HighlightESP and Options.HighlightESP.Value then
+                data.Highlight.Adornee = character
+                data.Highlight.Enabled = true
+                if Options.HighlightColor then
+                    data.Highlight.FillColor = Options.HighlightColor.Value
+                    data.Highlight.OutlineColor = Options.HighlightColor.Value
+                end
+            else
+                data.Highlight.Enabled = false
+            end
+        end
+
+        if isAlive then
+            local pos, onScreen = cam:WorldToViewportPoint(hrp.Position)
+            
+            if onScreen then
+                local topPos = cam:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3.5, 0))
+                local bottomPos = cam:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3.5, 0))
+                local height = math.abs(bottomPos.Y - topPos.Y)
+                local width = height * 0.65
+
+                local boxX = pos.X - width / 2
+                local boxY = topPos.Y
+
+                -- 1. 方框
+                if Options.BoxESP and Options.BoxESP.Value then
+                    data.Box.Visible = true
+                    data.Box.Size = UDim2.new(0, width, 0, height)
+                    data.Box.Position = UDim2.new(0, boxX, 0, boxY)
+                    data.BoxStroke.Color = Options.BoxColor.Value
+                else
+                    data.Box.Visible = false
+                end
+
+                -- 2. 射线
+                if Options.RayESP and Options.RayESP.Value then
+                    data.Ray.Visible = true
+                    local origin = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y)
+                    local target = Vector2.new(pos.X, pos.Y)
+                    local dir = target - origin
+                    local distance = dir.Magnitude
+                    local center = (origin + target) / 2
+                    
+                    data.Ray.Size = UDim2.new(0, distance, 0, 2)
+                    data.Ray.Position = UDim2.new(0, center.X, 0, center.Y)
+                    data.Ray.Rotation = math.deg(math.atan2(dir.Y, dir.X))
+                    data.Ray.BackgroundColor3 = Options.RayColor.Value
+                else
+                    data.Ray.Visible = false
+                end
+
+                -- 📌 动态推移坐标计算 (防重叠)
+                local currentY = boxY - 4 
+
+                -- 3. 血条和数值
+                if Options.HealthESP and Options.HealthESP.Value then
+                    local maxHp = math.max(hum.MaxHealth, 1)
+                    local curHp = hum.Health
+                    local hpPercent = math.clamp(curHp / maxHp, 0, 1)
+
+                    -- 向上推移 3px 放血条 (3px厚度圆角)
+                    currentY = currentY - 3
+                    data.HealthBg.Visible = true
+                    data.HealthBg.Size = UDim2.new(0, math.max(width, 40), 0, 3)
+                    data.HealthBg.Position = UDim2.new(0, pos.X - math.max(width, 40)/2, 0, currentY)
+                    data.HealthFill.Size = UDim2.new(hpPercent, 0, 1, 0)
+                    data.HealthFill.BackgroundColor3 = Options.HealthBarColor.Value
+
+                    -- 向上推移 12px 放血量数值
+                    currentY = currentY - 12
+                    data.HealthText.Visible = true
+                    data.HealthText.Text = formatHealth(curHp) .. " / " .. formatHealth(maxHp)
+                    data.HealthText.Position = UDim2.new(0, pos.X - 100, 0, currentY)
+                    data.HealthText.TextColor3 = Options.HealthBarColor.Value
+                else
+                    data.HealthText.Visible = false
+                    data.HealthBg.Visible = false
+                end
+
+                -- 4. 名字 (叠在最上面)
+                if Options.NameESP and Options.NameESP.Value then
+                    currentY = currentY - 12
+                    data.Name.Visible = true
+                    data.Name.Text = player.Name
+                    data.Name.Position = UDim2.new(0, pos.X - 100, 0, currentY)
+                    data.Name.TextColor3 = Options.TextColor.Value
+                else
+                    data.Name.Visible = false
+                end
+
+                -- 5. 距离 (方框下方)
+                if Options.DistanceESP and Options.DistanceESP.Value then
+                    data.Dist.Visible = true
+                    local localHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if localHrp then
+                        local dist = math.floor((hrp.Position - localHrp.Position).Magnitude)
+                        data.Dist.Text = dist .. " M"
+                        data.Dist.Position = UDim2.new(0, pos.X - 100, 0, bottomPos.Y + 5)
+                        data.Dist.TextColor3 = Options.TextColor.Value
+                    end
+                else
+                    data.Dist.Visible = false
+                end
+            else
+                data.Box.Visible = false; data.Ray.Visible = false; data.Name.Visible = false
+                data.HealthText.Visible = false; data.HealthBg.Visible = false; data.Dist.Visible = false
+            end
+        else
+            data.Box.Visible = false; data.Ray.Visible = false; data.Name.Visible = false
+            data.HealthText.Visible = false; data.HealthBg.Visible = false; data.Dist.Visible = false
+        end
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player) createPlayerESP(player) end)
+Players.PlayerRemoving:Connect(function(player) removePlayerESP(player) end)
+for _, player in pairs(Players:GetPlayers()) do createPlayerESP(player) end
+
+-- ==========================================
+-- 🟣 NPC ESP 系统
+-- ==========================================
+local NPC_Cache = {}
+
+local function IsValidNPC(model)
+    if not model or not model:IsA("Model") then return false end
+    if not model:FindFirstChild("HumanoidRootPart") then return false end
+    local hum = model:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return false end
+    if Players:GetPlayerFromCharacter(model) then return false end
+    return true
+end
+
+local function addNPCESP(npcModel)
+    if NPC_Cache[npcModel] then return end
+    
+    local data = {}
+    local container = Instance.new("Folder")
+    container.Name = genRandomName()
+    container.Parent = MasterESPContainer
+    data.Container = container
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = genRandomName()
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0.1
+    highlight.Adornee = npcModel
+    highlight.Parent = SafeContainer
+    highlight.Enabled = false
+    data.Highlight = highlight
+
+    -- 名字显示 (调小字体)
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = genRandomName()
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Size = UDim2.new(0, 200, 0, 12)
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 11
+    nameLabel.TextColor3 = MacaronBlue
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.Visible = false
+    nameLabel.Parent = container
+    data.Name = nameLabel
+
+    -- 血量数值 (调小字体)
+    local hpLabel = Instance.new("TextLabel")
+    hpLabel.Name = genRandomName()
+    hpLabel.BackgroundTransparency = 1
+    hpLabel.Size = UDim2.new(0, 200, 0, 12)
+    hpLabel.Font = Enum.Font.GothamBold
+    hpLabel.TextSize = 10
+    hpLabel.TextStrokeTransparency = 0
+    hpLabel.Visible = false
+    hpLabel.Parent = container
+    data.HealthText = hpLabel
+
+    -- 血量条背景 (3px厚度加圆角)
+    local hpBg = Instance.new("Frame")
+    hpBg.Name = genRandomName()
+    hpBg.BorderSizePixel = 0
+    hpBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    hpBg.Visible = false
+    hpBg.Parent = container
+    local bgCorner = Instance.new("UICorner", hpBg)
+    bgCorner.CornerRadius = UDim.new(1, 0)
+    data.HealthBg = hpBg
+
+    -- 血量条填充 (加圆角)
+    local hpFill = Instance.new("Frame")
+    hpFill.Name = genRandomName()
+    hpFill.BorderSizePixel = 0
+    hpFill.Parent = hpBg
+    local fillCorner = Instance.new("UICorner", hpFill)
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    data.HealthFill = hpFill
+    
+    -- 距离显示 (保持12号字)
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Name = genRandomName()
+    distLabel.BackgroundTransparency = 1
+    distLabel.Size = UDim2.new(0, 200, 0, 15)
+    distLabel.Font = Enum.Font.GothamBold
+    distLabel.TextSize = 12
+    distLabel.TextColor3 = MacaronBlue
+    distLabel.TextStrokeTransparency = 0
+    distLabel.Visible = false
+    distLabel.Parent = container
+    data.Dist = distLabel
+
+    NPC_Cache[npcModel] = data
+
+    local deathConn
+    deathConn = npcModel.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            if NPC_Cache[npcModel] then
+                NPC_Cache[npcModel].Container:Destroy()
+                if NPC_Cache[npcModel].Highlight then NPC_Cache[npcModel].Highlight:Destroy() end
+                NPC_Cache[npcModel] = nil
+            end
+            if deathConn then deathConn:Disconnect() end
+        end
+    end)
+end
+
+-- ==========================================
+-- 🟣 NPC UI 控件面板
+-- ==========================================
+Tabs.NPC_ESP:AddToggle("NPC_Master", { Title = "NPC 透视总开关", Default = false })
+Tabs.NPC_ESP:AddToggle("NPC_NameToggle", { Title = "显示名称", Default = false })
+Tabs.NPC_ESP:AddToggle("NPC_DistToggle", { Title = "显示距离", Default = false })
+Tabs.NPC_ESP:AddToggle("NPC_Health", { Title = "显示 NPC 血量条", Default = false })
+Tabs.NPC_ESP:AddToggle("NPC_HighlightToggle", { Title = "显示高亮", Default = false })
+Tabs.NPC_ESP:AddColorpicker("NPC_Color", { Title = "NPC 统一颜色", Default = MacaronBlue })
+
+-- 💥 优化：独立线程 0.5秒 扫描一次 NPC
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if Options.NPC_Master and Options.NPC_Master.Value then
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("Model") and IsValidNPC(obj) then
+                    addNPCESP(obj)
+                end
+            end
+        else
+            for model, data in pairs(NPC_Cache) do
+                if data.Container then data.Container:Destroy() end
+                if data.Highlight then data.Highlight:Destroy() end
+            end
+            table.clear(NPC_Cache)
+        end
+    end
+end)
+
+-- 🟢 NPC 原生 UI 渲染
+RunService.RenderStepped:Connect(function()
+    if not (Options.NPC_Master and Options.NPC_Master.Value) then return end
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+
+    for npcModel, data in pairs(NPC_Cache) do
+        local hrp = npcModel:FindFirstChild("HumanoidRootPart")
+        local hum = npcModel:FindFirstChildOfClass("Humanoid")
+        
+        local isAlive = hrp and hum and hum.Health > 0
+
+        if isAlive and Options.NPC_HighlightToggle and Options.NPC_HighlightToggle.Value then
+            data.Highlight.Enabled = true
+            data.Highlight.FillColor = Options.NPC_Color.Value
+            data.Highlight.OutlineColor = Options.NPC_Color.Value
+        else
+            data.Highlight.Enabled = false
+        end
+
+        if isAlive then
+            local pos, onScreen = cam:WorldToViewportPoint(hrp.Position)
+            if onScreen then
+                local topPos = cam:WorldToViewportPoint(hrp.Position + Vector3.new(0, 3.5, 0))
+                local bottomPos = cam:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3.5, 0))
+                local height = math.abs(bottomPos.Y - topPos.Y)
+                local width = height * 0.65
+                
+                local currentY = topPos.Y - 4
+
+                if Options.NPC_Health and Options.NPC_Health.Value then
+                    local maxHp = math.max(hum.MaxHealth, 1)
+                    local curHp = hum.Health
+                    local hpPercent = math.clamp(curHp / maxHp, 0, 1)
+
+                    currentY = currentY - 3
+                    data.HealthBg.Visible = true
+                    data.HealthBg.Size = UDim2.new(0, math.max(width, 40), 0, 3)
+                    data.HealthBg.Position = UDim2.new(0, pos.X - math.max(width, 40)/2, 0, currentY)
+                    data.HealthFill.Size = UDim2.new(hpPercent, 0, 1, 0)
+                    data.HealthFill.BackgroundColor3 = Options.NPC_Color.Value
+
+                    currentY = currentY - 12
+                    data.HealthText.Visible = true
+                    data.HealthText.Text = formatHealth(curHp) .. " / " .. formatHealth(maxHp)
+                    data.HealthText.Position = UDim2.new(0, pos.X - 100, 0, currentY)
+                    data.HealthText.TextColor3 = Options.NPC_Color.Value
+                else
+                    data.HealthText.Visible = false; data.HealthBg.Visible = false
+                end
+
+                if Options.NPC_NameToggle and Options.NPC_NameToggle.Value then
+                    currentY = currentY - 12
+                    data.Name.Visible = true
+                    data.Name.Text = npcModel.Name
+                    data.Name.Position = UDim2.new(0, pos.X - 100, 0, currentY)
+                    data.Name.TextColor3 = Options.NPC_Color.Value
+                else
+                    data.Name.Visible = false
+                end
+                
+                if Options.NPC_DistToggle and Options.NPC_DistToggle.Value then
+                    local localHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if localHrp then
+                        local dist = math.floor((hrp.Position - localHrp.Position).Magnitude)
+                        data.Dist.Text = dist .. " M"
+                        data.Dist.Visible = true
+                        data.Dist.Position = UDim2.new(0, pos.X - 100, 0, bottomPos.Y + 5)
+                        data.Dist.TextColor3 = Options.NPC_Color.Value
+                    else
+                        data.Dist.Visible = false
+                    end
+                else
+                    data.Dist.Visible = false
+                end
+            else
+                data.Name.Visible = false; data.HealthText.Visible = false; data.HealthBg.Visible = false; data.Dist.Visible = false
+            end
+        else
+            data.Name.Visible = false; data.HealthText.Visible = false; data.HealthBg.Visible = false; data.Dist.Visible = false
+        end
+    end
+end)
+
+-- ==========================================
+-- 🟢 核心自瞄变量与 FOV 准星创建
+-- ==========================================
+local GlobalAimbotEnabled = false
+local NPC_Aimbot_Enabled = false
+local SingleAimbotEnabled = false
+
+local AimbotFOVRadius = 150
+local AimbotSmoothness = 0.4
+local NPC_Aimbot_Smoothness = 0.4
+local AimbotRainbowFOV = false
+local AimbotFOVColor = Color3.fromRGB(255, 215, 215)
+local AimbotTargetPart = "Head" -- 默认设定为头部
+
+local AimbotTeamCheck = false
+local AimbotWallCheck = true
+local NPC_Aimbot_WallCheck = true
+
+local targetSinglePlayer = nil
+local targetSinglePlayerName = nil
+
+local FOVCircle = Instance.new("Frame")
+FOVCircle.Name = "AimbotFOV"
+FOVCircle.Parent = ScreenGui -- 请确保你的脚本前面已经创建了 ScreenGui
+FOVCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVCircle.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOVCircle.Size = UDim2.new(0, AimbotFOVRadius * 2, 0, AimbotFOVRadius * 2)
+FOVCircle.BackgroundTransparency = 1
+FOVCircle.Visible = false
+
+local UIStroke = Instance.new("UIStroke", FOVCircle)
+UIStroke.Thickness = 2
+UIStroke.Color = AimbotFOVColor
+
+local UICorner = Instance.new("UICorner", FOVCircle)
+UICorner.CornerRadius = UDim.new(1, 0)
+
+-- ==========================================
+-- 🟢 黑名单系统变量与更新函数
+-- ==========================================
+local AimbotBlacklistEnabled = false
+local AimbotBlacklist = {}
+local selectedServerPlayer = "无玩家"
+local selectedBlacklistPlayer = "无"
+
+local function UpdateServerPlayersDropdown()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then table.insert(list, p.Name) end
+    end
+    if #list == 0 then list = {"无玩家"} end
+    if Options.ServerPlayersDropdown then Options.ServerPlayersDropdown:SetValues(list) end
+end
+
+local function UpdateBlacklistDropdown()
+    local list = #AimbotBlacklist > 0 and AimbotBlacklist or {"无"}
+    if Options.BlacklistListDropdown then Options.BlacklistListDropdown:SetValues(list) end
+end
+
+-- ==========================================
+-- 🟢 NPC 缓存引擎 (静默运行)
+-- ==========================================
+local NPC_Cache = {}
+local NPC_Connections = {}
+
+local function IsValidNPC(model)
+    if not model or not model:IsA("Model") then return false end
+    if not model:FindFirstChild("HumanoidRootPart") then return false end
+    local hum = model:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return false end
+    if Players:GetPlayerFromCharacter(model) then return false end
+    return true
+end
+
+local function AddNPCToCache(npcModel)
+    if NPC_Cache[npcModel] then return end
+    NPC_Cache[npcModel] = true
+
+    local deathConn
+    deathConn = npcModel.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            NPC_Cache[npcModel] = nil
+            if deathConn then deathConn:Disconnect() end
+        end
+    end)
+    
+    local hum = npcModel:FindFirstChildOfClass("Humanoid")
+    if hum then
+        local healthConn
+        healthConn = hum.Died:Connect(function()
+            NPC_Cache[npcModel] = nil
+            if healthConn then healthConn:Disconnect() end
+        end)
+    end
+end
+
+local function ScanForNPCs(parent)
+    for _, child in ipairs(parent:GetChildren()) do
+        if child:IsA("BasePart") or child:IsA("Script") or child:IsA("Terrain") then continue end
+        if child:IsA("Model") then
+            if IsValidNPC(child) then AddNPCToCache(child)
+            else task.defer(ScanForNPCs, child) end
+        elseif child:IsA("Folder") then
+            task.defer(ScanForNPCs, child)
+        end
+    end
+end
+
+-- ==========================================
+-- 🟢 双端自瞄核心：获取最接近目标 (共用FOV)
+-- ==========================================
+local function GetClosestEntity()
+    local closestPart = nil
+    local shortestDist = AimbotFOVRadius
+    local isPlayerTarget = true -- 用于区分平滑度
+
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local origin = Camera.CFrame.Position
+
+    -- 1. 扫描真实玩家
+    if GlobalAimbotEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                if AimbotBlacklistEnabled and table.find(AimbotBlacklist, player.Name) then continue end
+                if AimbotTeamCheck and player.Team == LocalPlayer.Team then continue end
+                
+                local humanoid = player.Character:FindFirstChild("Humanoid")
+                if not humanoid or humanoid.Health <= 0 then continue end
+
+                local targetPart = player.Character:FindFirstChild(AimbotTargetPart)
+                if not targetPart then continue end
+
+                local pos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                if onScreen then
+                    local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                    if dist <= shortestDist then
+                        if AimbotWallCheck then
+                            local direction = (targetPart.Position - origin).Unit * 500
+                            local params = RaycastParams.new()
+                            params.FilterDescendantsInstances = {LocalPlayer.Character or {}}
+                            params.FilterType = Enum.RaycastFilterType.Blacklist
+                            local result = workspace:Raycast(origin, direction, params)
+                            if result and result.Instance:IsDescendantOf(player.Character) then
+                                closestPart = targetPart
+                                shortestDist = dist
+                                isPlayerTarget = true
+                            end
+                        else
+                            closestPart = targetPart
+                            shortestDist = dist
+                            isPlayerTarget = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- 2. 扫描 NPC (可以与玩家同时开启，谁距离准星更近就锁谁)
+    if NPC_Aimbot_Enabled then
+        for npcModel, _ in pairs(NPC_Cache) do
+            local hum = npcModel:FindFirstChildOfClass("Humanoid")
+            local hrp = npcModel:FindFirstChild("HumanoidRootPart")
+            -- 如果找不到你选的部位，保底锁 RootPart
+            local targetPart = npcModel:FindFirstChild(AimbotTargetPart) or hrp 
+
+            if targetPart and hum and hum.Health > 0 and hrp then
+                local pos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                if onScreen then
+                    local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                    if dist <= shortestDist then
+                        if NPC_Aimbot_WallCheck then
+                            local direction = (targetPart.Position - origin).Unit * 500
+                            local params = RaycastParams.new()
+                            params.FilterDescendantsInstances = {LocalPlayer.Character or {}}
+                            params.FilterType = Enum.RaycastFilterType.Blacklist
+                            local result = workspace:Raycast(origin, direction, params)
+                            if result and result.Instance:IsDescendantOf(npcModel) then
+                                closestPart = targetPart
+                                shortestDist = dist
+                                isPlayerTarget = false
+                            end
+                        else
+                            closestPart = targetPart
+                            shortestDist = dist
+                            isPlayerTarget = false
+                        end
+                    end
+                end
+            else
+                if not hrp or (hum and hum.Health <= 0) then NPC_Cache[npcModel] = nil end
+            end
+        end
+    end
+
+    return closestPart, isPlayerTarget
+end
+
+-- 指定玩家自瞄函数
+local function UpdateSingleTarget()
+    if not targetSinglePlayerName or targetSinglePlayerName == "无玩家" then
+        targetSinglePlayer = nil; return
+    end
+    local mode = Options.SingleModeDropdown.Value or "名称"
+    for _, player in pairs(Players:GetPlayers()) do
+        if AimbotBlacklistEnabled and table.find(AimbotBlacklist, player.Name) then continue end
+        if (mode == "名称" and player.Name == targetSinglePlayerName) or (mode == "昵称" and player.DisplayName == targetSinglePlayerName) then
+            targetSinglePlayer = player; return
+        end
+    end
+    targetSinglePlayer = nil
+end
+
+local function UpdateSinglePlayerList()
+    local players = Players:GetPlayers()
+    local playerNames = {}
+    local mode = Options.SingleModeDropdown.Value or "名称"
+    for _, player in pairs(players) do
+        if player ~= LocalPlayer then
+            if mode == "名称" then table.insert(playerNames, player.Name)
+            elseif mode == "昵称" then table.insert(playerNames, player.DisplayName) end
+        end
+    end
+    if #playerNames == 0 then playerNames = {"无玩家"} end
+    Options.SinglePlayerDropdown:SetValues(playerNames)
+    if #playerNames > 0 and playerNames[1] ~= "无玩家" then
+        if not table.find(playerNames, Options.SinglePlayerDropdown.Value) then
+            Options.SinglePlayerDropdown:SetValue(playerNames[1])
+        end
+    else
+        Options.SinglePlayerDropdown:SetValue("无玩家")
+    end
+end
+
+-- ==========================================
+-- 🟢 自瞄相机渲染引擎
+-- ==========================================
+RunService.RenderStepped:Connect(function()
+    if AimbotRainbowFOV then
+        local hue = tick() % 5 / 5
+        UIStroke.Color = Color3.fromHSV(hue, 1, 1)
+    elseif UIStroke.Color ~= AimbotFOVColor then
+        UIStroke.Color = AimbotFOVColor
+    end
+
+    -- 无论开哪种自瞄，FOV圈共用这一个
+    FOVCircle.Visible = GlobalAimbotEnabled or NPC_Aimbot_Enabled
+
+    if GlobalAimbotEnabled or NPC_Aimbot_Enabled then
+        local targetPart, isPlayerTarget = GetClosestEntity()
+        if targetPart then
+            local newCFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+            -- 根据目标是玩家还是NPC，自动调用对应的平滑度
+            local smooth = isPlayerTarget and AimbotSmoothness or NPC_Aimbot_Smoothness
+            Camera.CFrame = Camera.CFrame:Lerp(newCFrame, smooth)
+        end
+    elseif SingleAimbotEnabled then
+        UpdateSingleTarget()
+        if targetSinglePlayer and targetSinglePlayer.Character then
+            local humanoid = targetSinglePlayer.Character:FindFirstChild("Humanoid")
+            local targetPart = targetSinglePlayer.Character:FindFirstChild(AimbotTargetPart)
+            if humanoid and humanoid.Health > 0 and targetPart then
+                local newCFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+                Camera.CFrame = Camera.CFrame:Lerp(newCFrame, AimbotSmoothness)
+            end
+        end
+    end
+end)
+
+
+Tabs.Aimbot:AddSection("自瞄总控")
+
+Tabs.Aimbot:AddToggle("GlobalAimbotEnabled", {
+    Title = "启用 玩家自瞄",
+    Default = false,
+    Callback = function(value)
+        GlobalAimbotEnabled = value
+        if value and SingleAimbotEnabled then
+            SingleAimbotEnabled = false
+            Options.SingleAimbotEnabled:SetValue(false)
+            Fluent:Notify({Title = "提示", Content = "已自动关闭指定单人自瞄", Duration = 3})
+        end
+    end
+})
+
+Tabs.Aimbot:AddToggle("NPC_Aimbot_Toggle", {
+    Title = "启用 NPC 自瞄 (可与玩家自瞄同开)",
+    Default = false,
+    Callback = function(state)
+        NPC_Aimbot_Enabled = state
+        if state then
+            table.insert(NPC_Connections, workspace.DescendantAdded:Connect(function(descendant)
+                if not NPC_Aimbot_Enabled then return end
+                if descendant:IsA("Humanoid") then
+                    task.delay(0.5, function()
+                        local parentModel = descendant.Parent
+                        if parentModel and IsValidNPC(parentModel) then AddNPCToCache(parentModel) end
+                    end)
+                end
+            end))
+            task.spawn(function() ScanForNPCs(workspace) end)
+        else
+            for _, conn in ipairs(NPC_Connections) do conn:Disconnect() end
+            table.clear(NPC_Connections); table.clear(NPC_Cache)
+        end
+    end
+})
+
+Tabs.Aimbot:AddDropdown("AimbotTargetPartDropdown", {
+    Title = "全局锁定部位 (玩家与NPC共用)",
+    Values = {"头部", "身体"},
+    Default = 1, -- 【默认修改为头部】
+    Callback = function(value)
+        AimbotTargetPart = (value == "头部") and "Head" or "HumanoidRootPart"
+    end
+})
+
+Tabs.Aimbot:AddSection("⚙️ 自瞄参数调节 (FOV与平滑度)")
+
+Tabs.Aimbot:AddSlider("AimbotFOVRadius", {
+    Title = "共用 FOV 范围大小",
+    Min = 50, Max = 500, Default = 150, Rounding = 1,
+    Callback = function(value)
+        AimbotFOVRadius = value
+        FOVCircle.Size = UDim2.new(0, value * 2, 0, value * 2)
+    end
+})
+
+Tabs.Aimbot:AddSlider("AimbotSmoothness", {
+    Title = "玩家自瞄 - 平滑度",
+    Min = 0.05, Max = 1, Default = 0.4, Rounding = 2,
+    Callback = function(value) AimbotSmoothness = value end
+})
+
+Tabs.Aimbot:AddSlider("NPC_Aimbot_Smoothness", {
+    Title = "NPC自瞄 - 平滑度",
+    Min = 0.05, Max = 1, Default = 0.4, Rounding = 2,
+    Callback = function(value) NPC_Aimbot_Smoothness = value end
+})
+
+Tabs.Aimbot:AddToggle("AimbotRainbowFOV", { Title = "FOV 彩虹颜色模式", Default = false, Callback = function(value) AimbotRainbowFOV = value end })
+Tabs.Aimbot:AddColorpicker("AimbotFOVColor", {
+    Title = "FOV 静态颜色", Default = Color3.fromRGB(255, 215, 215),
+    Callback = function(value) AimbotFOVColor = value; if not AimbotRainbowFOV then UIStroke.Color = value end end
+})
+
+Tabs.Aimbot:AddSection("🛡️ 目标过滤系统 (防隔墙/防队友)")
+
+Tabs.Aimbot:AddToggle("AimbotWallCheck", { Title = "玩家 - 墙壁遮挡检查", Default = true, Callback = function(v) AimbotWallCheck = v end })
+Tabs.Aimbot:AddToggle("NPC_Aimbot_WallCheck", { Title = "NPC - 墙壁遮挡检查", Default = true, Callback = function(v) NPC_Aimbot_WallCheck = v end })
+Tabs.Aimbot:AddToggle("AimbotTeamCheck", { Title = "队伍检查 (防锁队友)", Default = false, Callback = function(v) AimbotTeamCheck = v end })
+
+Tabs.Aimbot:AddSection("🚫 黑名单系统 (防误锁指定玩家)")
+
+Tabs.Aimbot:AddToggle("BlacklistToggle", {
+    Title = "启用玩家黑名单拦截",
+    Description = "开启后，双端自瞄都会完全无视黑名单中的玩家",
+    Default = false,
+    Callback = function(value) AimbotBlacklistEnabled = value end
+})
+
+Tabs.Aimbot:AddDropdown("ServerPlayersDropdown", {
+    Title = "1. 选择服务器内玩家",
+    Values = {"无玩家"}, Default = 1,
+    Callback = function(value) selectedServerPlayer = value end
+})
+
+Tabs.Aimbot:AddButton({
+    Title = "↻ 刷新服务器内玩家列表",
+    Callback = UpdateServerPlayersDropdown
+})
+
+Tabs.Aimbot:AddButton({
+    Title = "▶ 将选中玩家移入黑名单",
+    Callback = function()
+        if selectedServerPlayer ~= "无玩家" and not table.find(AimbotBlacklist, selectedServerPlayer) then
+            table.insert(AimbotBlacklist, selectedServerPlayer)
+            UpdateBlacklistDropdown()
+            Fluent:Notify({Title = "黑名单已更新", Content = "已将 " .. selectedServerPlayer .. " 设为不瞄准", Duration = 3})
+        elseif table.find(AimbotBlacklist, selectedServerPlayer) then
+            Fluent:Notify({Title = "提示", Content = "该玩家已在黑名单中", Duration = 2})
+        end
+    end
+})
+
+Tabs.Aimbot:AddDropdown("BlacklistListDropdown", {
+    Title = "2. 选择已在黑名单内的玩家",
+    Values = {"无"}, Default = 1,
+    Callback = function(value) selectedBlacklistPlayer = value end
+})
+
+Tabs.Aimbot:AddButton({
+    Title = "◀ 将选中玩家移出黑名单",
+    Callback = function()
+        local index = table.find(AimbotBlacklist, selectedBlacklistPlayer)
+        if index then
+            table.remove(AimbotBlacklist, index)
+            UpdateBlacklistDropdown()
+            Fluent:Notify({Title = "黑名单已更新", Content = "已解除 " .. selectedBlacklistPlayer .. " 的免打保护", Duration = 3})
+        else
+            Fluent:Notify({Title = "提示", Content = "请先选择一个有效的黑名单玩家", Duration = 2})
+        end
+    end
+})
+
+-- 自动监听玩家进出刷新列表
+Players.PlayerAdded:Connect(UpdateServerPlayersDropdown)
+Players.PlayerRemoving:Connect(UpdateServerPlayersDropdown)
+UpdateServerPlayersDropdown() -- 初始化调用一次
+
+Tabs.Aimbot:AddSection("指定单一玩家自瞄")
+
+Tabs.Aimbot:AddDropdown("SingleModeDropdown", { Title = "选择显示模式", Values = {"名称", "昵称"}, Default = 1, Callback = UpdateSinglePlayerList })
+Tabs.Aimbot:AddDropdown("SinglePlayerDropdown", {
+    Title = "选择目标玩家", Values = {}, Default = 1,
+    Callback = function(value) targetSinglePlayerName = (value ~= "无玩家") and value or nil; UpdateSingleTarget() end
+})
+
+Tabs.Aimbot:AddButton({ Title = "刷新玩家列表", Callback = UpdateSinglePlayerList })
+
+Tabs.Aimbot:AddToggle("SingleAimbotEnabled", {
+    Title = "开启指定玩家自瞄",
+    Default = false,
+    Callback = function(value)
+        SingleAimbotEnabled = value
+        if value then
+            if not targetSinglePlayerName or targetSinglePlayerName == "无玩家" then
+                Fluent:Notify({Title = "错误", Content = "请先选择一个目标玩家", Duration = 3})
+                Options.SingleAimbotEnabled:SetValue(false)
+                return
+            end
+            if GlobalAimbotEnabled then
+                Options.GlobalAimbotEnabled:SetValue(false)
+                Fluent:Notify({Title = "提示", Content = "已自动关闭群体玩家自瞄", Duration = 3})
+            end
+        end
+    end
+})
+
+
+-- ==========================================
+-- 🚀 高级传送与甩飞系统 (Teleport & Fling Module)
+-- ==========================================
+Tabs.Teleport:AddSection("传送目标选择")
+
+local TP_TargetMode = "用户名"
+local TP_SelectedString = "无玩家"
+local TP_Distance = 5
+local TP_Direction = "前面"
+
+local TP_ContinuousEnabled = false
+local TP_CircleEnabled = false
+local TP_CircleAngle = 0
+local TP_SpectateEnabled = false
+local TP_SpectateConnection = nil
+
+-- 核心：玩家实体映射表 (彻底解决重名导致的传错人BUG)
+local TP_PlayerMap = {}
+
+-- 核心寻人函数 (直接从映射表提取实体)
+local function GetTPTargetPlayer()
+    if not TP_SelectedString or TP_SelectedString == "无玩家" then return nil end
+    local target = TP_PlayerMap[TP_SelectedString]
+    -- 确保玩家没有退服
+    if target and target.Parent then return target end
+    return nil
+end
+
+-- 动态刷新玩家列表函数 (带智能排版)
+local function UpdateTPPlayerList()
+    table.clear(TP_PlayerMap) -- 清空旧的映射
+    local list = {}
+    
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            local displayStr = ""
+            if TP_TargetMode == "用户名" then
+                displayStr = p.Name
+            elseif TP_TargetMode == "姓名" then
+                -- 显示格式为 "姓名 (@用户名)"
+                displayStr = string.format("%s (@%s)", p.DisplayName, p.Name)
+            end
+            
+            table.insert(list, displayStr)
+            TP_PlayerMap[displayStr] = p -- 将文字绑定给玩家实体
+        end
+    end
+    
+    if #list == 0 then list = {"无玩家"} end
+    if Options.TP_PlayerDropdown then 
+        Options.TP_PlayerDropdown:SetValues(list) 
+        if not table.find(list, Options.TP_PlayerDropdown.Value) then
+            Options.TP_PlayerDropdown:SetValue(list[1])
+        end
+    end
+end
+
+-- 1. 名称类型选择
+Tabs.Teleport:AddDropdown("TP_ModeDropdown", {
+    Title = "1. 选择名称显示类型",
+    Values = {"用户名", "姓名"},
+    Default = 1,
+    Callback = function(value)
+        TP_TargetMode = value
+        UpdateTPPlayerList()
+    end
+})
+
+-- 2. 玩家选择列表
+Tabs.Teleport:AddDropdown("TP_PlayerDropdown", {
+    Title = "2. 选择目标玩家",
+    Values = {"无玩家"},
+    Default = 1,
+    Callback = function(value)
+        TP_SelectedString = value
+    end
+})
+
+Tabs.Teleport:AddButton({ Title = "刷新玩家列表", Callback = UpdateTPPlayerList })
+
+-- 自动监听进出刷新列表
+Players.PlayerAdded:Connect(UpdateTPPlayerList)
+Players.PlayerRemoving:Connect(UpdateTPPlayerList)
+UpdateTPPlayerList()
+
+Tabs.Teleport:AddSection("传送参数设置")
+
+-- 3. 传送方位选择
+Tabs.Teleport:AddDropdown("TP_DirectionDropdown", {
+    Title = "传送方位 (相对目标)",
+    Values = {"前面", "后面", "左边", "右边", "上面", "下面"},
+    Default = 1,
+    Callback = function(value) TP_Direction = value end
+})
+
+-- 4. 传送距离输入
+Tabs.Teleport:AddInput("TP_DistanceInput", {
+    Title = "传送距离 (Studs)",
+    Default = "5",
+    Numeric = true,
+    Finished = true,
+    Placeholder = "输入数字...",
+    Callback = function(value)
+        local num = tonumber(value)
+        if num then TP_Distance = num end
+    end
+})
+
+Tabs.Teleport:AddSection("传送执行")
+
+-- 核心：计算目标 CFrame
+local function GetTeleportCFrame(targetHRP)
+    if TP_Direction == "前面" then return targetHRP.CFrame * CFrame.new(0, 0, -TP_Distance)
+    elseif TP_Direction == "后面" then return targetHRP.CFrame * CFrame.new(0, 0, TP_Distance)
+    elseif TP_Direction == "左边" then return targetHRP.CFrame * CFrame.new(-TP_Distance, 0, 0)
+    elseif TP_Direction == "右边" then return targetHRP.CFrame * CFrame.new(TP_Distance, 0, 0)
+    elseif TP_Direction == "上面" then return targetHRP.CFrame * CFrame.new(0, TP_Distance, 0)
+    elseif TP_Direction == "下面" then return targetHRP.CFrame * CFrame.new(0, -TP_Distance, 0)
+    end
+    return targetHRP.CFrame
+end
+
+-- 单次传送按钮
+Tabs.Teleport:AddButton({
+    Title = "▶ 传送一次",
+    Callback = function()
+        if TP_CircleEnabled or TP_ContinuousEnabled then
+            Fluent:Notify({Title = "提示", Content = "请先关闭持续传送或环绕传送", Duration = 3})
+            return
+        end
+        local target = GetTPTargetPlayer()
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if myHRP then
+                myHRP.CFrame = GetTeleportCFrame(target.Character.HumanoidRootPart)
+                Fluent:Notify({Title = "成功", Content = "已传送到目标位置", Duration = 2})
+            end
+        else
+            Fluent:Notify({Title = "错误", Content = "目标玩家无效或未加载", Duration = 3})
+        end
+    end
+})
+
+-- 持续传送开关
+Tabs.Teleport:AddToggle("TP_ContinuousToggle", {
+    Title = "持续传送",
+    Default = false,
+    Callback = function(state)
+        TP_ContinuousEnabled = state
+        if state and TP_CircleEnabled then
+            -- 互斥逻辑
+            Options.TP_CircleToggle:SetValue(false)
+            Fluent:Notify({Title = "提示", Content = "已自动关闭环绕传送", Duration = 2})
+        end
+    end
+})
+
+-- 环绕传送开关
+Tabs.Teleport:AddToggle("TP_CircleToggle", {
+    Title = "环绕传送",
+    Default = false,
+    Callback = function(state)
+        TP_CircleEnabled = state
+        if state then
+            TP_CircleAngle = 0 
+            if TP_ContinuousEnabled then
+                -- 互斥逻辑
+                Options.TP_ContinuousToggle:SetValue(false)
+                Fluent:Notify({Title = "提示", Content = "已自动关闭持续传送", Duration = 2})
+            end
+        end
+    end
+})
+
+Tabs.Teleport:AddSection("视角控制")
+
+-- 旁观模式开关
+Tabs.Teleport:AddToggle("TP_SpectateToggle", {
+    Title = "旁观模式",
+    Default = false,
+    Callback = function(state)
+        TP_SpectateEnabled = state
+        if not state then
+            if TP_SpectateConnection then TP_SpectateConnection:Disconnect(); TP_SpectateConnection = nil end
+            local myHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if myHum then workspace.CurrentCamera.CameraSubject = myHum end
+        else
+            if TP_SpectateConnection then TP_SpectateConnection:Disconnect() end
+            TP_SpectateConnection = RunService.RenderStepped:Connect(function()
+                if not TP_SpectateEnabled then return end
+                local target = GetTPTargetPlayer()
+                if target and target.Character then
+                    local targetHum = target.Character:FindFirstChildOfClass("Humanoid")
+                    if targetHum then
+                        workspace.CurrentCamera.CameraSubject = targetHum
+                    else
+                        local myHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                        if myHum then workspace.CurrentCamera.CameraSubject = myHum end
+                    end
+                else
+                    local myHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                    if myHum then workspace.CurrentCamera.CameraSubject = myHum end
+                end
+            end)
+        end
+    end
+})
+
+-- ==========================================
+-- 🟢 传送与环绕 核心渲染循环
+-- ==========================================
+RunService.Heartbeat:Connect(function(deltaTime)
+    if TP_ContinuousEnabled then
+        local target = GetTPTargetPlayer()
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if myHRP then
+                myHRP.CFrame = GetTeleportCFrame(target.Character.HumanoidRootPart)
+                myHRP.Velocity = Vector3.new(0, 0, 0) 
+            end
+        end
+    end
+
+    if TP_CircleEnabled then
+        local target = GetTPTargetPlayer()
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if myHRP then
+                TP_CircleAngle = TP_CircleAngle + (math.pi * 2 * 0.5 * deltaTime) 
+                if TP_CircleAngle >= math.pi * 2 then TP_CircleAngle = TP_CircleAngle - (math.pi * 2) end
+                
+                local targetPos = target.Character.HumanoidRootPart.Position
+                local offsetX = math.cos(TP_CircleAngle) * TP_Distance
+                local offsetZ = math.sin(TP_CircleAngle) * TP_Distance
+                
+                local newPos = targetPos + Vector3.new(offsetX, 0, offsetZ)
+                myHRP.CFrame = CFrame.new(newPos, targetPos)
+                myHRP.Velocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end
+end)
+
+-- ==========================================
+-- 💥 甩飞系统 (优化版)
+-- ==========================================
+Tabs.Teleport:AddSection("甩飞系统")
+
+local function SkidFling(TargetPlayer)
+    local Character = Players.LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    local RootPart = Humanoid and Humanoid.RootPart
+
+    local TCharacter = TargetPlayer.Character
+    local THumanoid = TCharacter and TCharacter:FindFirstChildOfClass("Humanoid")
+    local TRootPart = THumanoid and THumanoid.RootPart
+    local THead = TCharacter and TCharacter:FindFirstChild("Head")
+    local Accessory = TCharacter and TCharacter:FindFirstChildOfClass("Accessory")
+    local Handle = Accessory and Accessory:FindFirstChild("Handle")
+
+    if Character and Humanoid and RootPart then
+        if RootPart.Velocity.Magnitude < 50 then
+            getgenv().OldPos = RootPart.CFrame
+        end
+        if THumanoid and THumanoid.Sit then
+            Fluent:Notify({ Title = "提示", Content = "目标玩家正在坐下，无法甩飞", Duration = 3 })
+            return false
+        end
+        if THead then
+            workspace.CurrentCamera.CameraSubject = THead
+        elseif not THead and Handle then
+            workspace.CurrentCamera.CameraSubject = Handle
+        elseif THumanoid and TRootPart then
+            workspace.CurrentCamera.CameraSubject = THumanoid
+        end
+        if not TCharacter:FindFirstChildWhichIsA("BasePart") then
+            return false
+        end
+
+        local FPos = function(BasePart, Pos, Ang)
+            RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
+            Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
+            RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+            RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+        end
+
+        local SFBasePart = function(BasePart)
+            local TimeToWait = 2
+            local Time = tick()
+            local Angle = 0
+
+            repeat
+                if RootPart and THumanoid then
+                    if BasePart.Velocity.Magnitude < 50 then
+                        Angle = Angle + 100
+                        FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(2.25, 1.5, -2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(-2.25, -1.5, 2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+                    else
+                        FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, -1.5, -THumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, -1.5, -TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(0, 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(-90), 0, 0))
+                        task.wait()
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                        task.wait()
+                    end
+                else
+                    break
+                end
+            until BasePart.Velocity.Magnitude > 500 or BasePart.Parent ~= TargetPlayer.Character or TargetPlayer.Parent ~= Players or not TargetPlayer.Character == TCharacter or THumanoid.Sit or Humanoid.Health <= 0 or tick() > Time + TimeToWait
+        end
+
+        workspace.FallenPartsDestroyHeight = 0/0
+        local BV = Instance.new("BodyVelocity")
+        BV.Name = "EpixVel"
+        BV.Parent = RootPart
+        BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
+        BV.MaxForce = Vector3.new(1/0, 1/0, 1/0)
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+        if TRootPart and THead then
+            if (TRootPart.CFrame.p - THead.CFrame.p).Magnitude > 5 then
+                SFBasePart(THead)
+            else
+                SFBasePart(TRootPart)
+            end
+        elseif TRootPart and not THead then
+            SFBasePart(TRootPart)
+        elseif not TRootPart and THead then
+            SFBasePart(THead)
+        elseif not TRootPart and not THead and Accessory and Handle then
+            SFBasePart(Handle)
+        else
+            Fluent:Notify({ Title = "错误", Content = "目标玩家缺少身体部件", Duration = 3 })
+            return false
+        end
+
+        BV:Destroy()
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        workspace.CurrentCamera.CameraSubject = Humanoid
+
+        repeat
+            RootPart.CFrame = getgenv().OldPos * CFrame.new(0, .5, 0)
+            Character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, .5, 0))
+            Humanoid:ChangeState("GettingUp")
+            table.foreach(Character:GetChildren(), function(_, x)
+                if x:IsA("BasePart") then
+                    x.Velocity, x.RotVelocity = Vector3.new(), Vector3.new()
+                end
+            end)
+            task.wait()
+        until (RootPart.Position - getgenv().OldPos.p).Magnitude < 25
+        workspace.FallenPartsDestroyHeight = getgenv().FPDH
+        return true
+    else
+        return false
+    end
+end
+
+local SelectedFlingPlayer = nil
+
+local function UpdateFlingDropdown()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then table.insert(list, p.Name) end
+    end
+    if #list == 0 then table.insert(list, "无玩家") end
+    if Options.FlingPlayerDropdown then
+        Options.FlingPlayerDropdown:SetValues(list)
+    end
+end
+
+Tabs.Teleport:AddDropdown("FlingPlayerDropdown", {
+    Title = "选择甩飞目标 (按用户名)",
+    Values = {"无玩家"},
+    Default = 1,
+    Callback = function(value)
+        if value ~= "无玩家" then
+            SelectedFlingPlayer = Players:FindFirstChild(value)
+        else
+            SelectedFlingPlayer = nil
+        end
+    end
+})
+
+Tabs.Teleport:AddButton({ Title = "刷新甩飞玩家列表", Callback = UpdateFlingDropdown })
+Players.PlayerAdded:Connect(UpdateFlingDropdown)
+Players.PlayerRemoving:Connect(UpdateFlingDropdown)
+UpdateFlingDropdown()
+
+Tabs.Teleport:AddButton({
+    Title = "▶ 甩飞当前选中玩家 (1次)",
+    Callback = function()
+        if SelectedFlingPlayer and SelectedFlingPlayer.Character then
+            SkidFling(SelectedFlingPlayer)
+            Fluent:Notify({ Title = "成功", Content = "正在甩飞 " .. SelectedFlingPlayer.Name, Duration = 3 })
+        else
+            Fluent:Notify({ Title = "错误", Content = "未选择有效玩家或玩家未加载", Duration = 3 })
+        end
+    end
+})
+
+local AutoFlingLoop = false
+Tabs.Teleport:AddToggle("AutoFlingToggle", {
+    Title = "循环监测甩飞",
+    Description = "甩飞成功后会等待目标复活，然后再甩，不掉帧",
+    Default = false,
+    Callback = function(state)
+        AutoFlingLoop = state
+        if state then
+            if not SelectedFlingPlayer then
+                Fluent:Notify({ Title = "提示", Content = "请先在上方选择一个目标", Duration = 3 })
+                Options.AutoFlingToggle:SetValue(false)
+                return
+            end
+            
+            Fluent:Notify({ Title = "已开启", Content = "正在持续监测并甩飞 " .. SelectedFlingPlayer.Name, Duration = 3 })
+            
+            task.spawn(function()
+                while AutoFlingLoop and SelectedFlingPlayer and SelectedFlingPlayer.Parent do
+                    local char = SelectedFlingPlayer.Character
+                    local hum = char and char:FindFirstChildOfClass("Humanoid")
+                    
+                    if char and hum and hum.Health > 0 then
+                        SkidFling(SelectedFlingPlayer)
+                        
+                        repeat task.wait(0.5) 
+                        until not AutoFlingLoop 
+                           or not SelectedFlingPlayer.Parent 
+                           or not SelectedFlingPlayer.Character 
+                           or not SelectedFlingPlayer.Character:FindFirstChildOfClass("Humanoid") 
+                           or SelectedFlingPlayer.Character:FindFirstChildOfClass("Humanoid").Health <= 0
+                    end
+                    task.wait(1) 
+                end
+                
+                if AutoFlingLoop then
+                    Options.AutoFlingToggle:SetValue(false)
+                    Fluent:Notify({ Title = "提示", Content = "目标已离开服务器，监测已关闭", Duration = 4 })
+                end
+            end)
+        end
+    end
+})
+
+Tabs.Teleport:AddButton({
+    Title = "甩飞全图所有人",
+    Description = "依次向服务器内所有玩家发起甩飞",
+    Callback = function()
+        Fluent:Notify({ Title = "警告", Content = "正在执行全图甩飞...", Duration = 3 })
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                task.spawn(function()
+                    SkidFling(player)
+                end)
+                task.wait(0.5) 
+            end
+        end
+    end
+})
+
+-- ==========================================
+-- 📍 定点传送系统 (Waypoint Teleport Module)
+-- ==========================================
+Tabs.Qwqr:AddSection("坐标记录")
+
+-- 独有前缀变量声明 (防止冲突)
+local ontp_SavedLocations = {}
+local ontp_SequenceList = {}
+
+local ontp_SelectedForDelete = nil
+local ontp_SelectedForTP = nil
+local ontp_ContinuousTPEnabled = false
+
+local ontp_SelectedForSeqAdd = nil
+local ontp_SeqLoopEnabled = false
+local ontp_SeqLoopThread = nil
+local ontp_SeqInterval = 1 -- 新增：循环传送的时间间隔，默认1秒
+
+-- 1. 输入框显示当前绝对坐标，每两秒更新一次
+local ontp_CurrentPosDisplay = Tabs.Qwqr:AddInput("ontp_CurrentPos", {
+    Title = "当前绝对坐标 (自动更新)",
+    Default = "获取中...",
+    Numeric = false,
+    Finished = false,
+    Callback = function() end -- 仅做展示用
+})
+
+task.spawn(function()
+    while task.wait(2) do
+        pcall(function()
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                if Options.ontp_CurrentPos then
+                    Options.ontp_CurrentPos:SetValue(string.format("%.2f, %.2f, %.2f", pos.X, pos.Y, pos.Z))
+                end
+            end
+        end)
+    end
+end)
+
+-- 2. 输入框，给需要记录的坐标添加名字
+Tabs.Qwqr:AddInput("ontp_SaveName", {
+    Title = "坐标名字",
+    Default = "点位1",
+    Placeholder = "输入坐标名称...",
+    Numeric = false,
+    Finished = false, -- 改为 false，让输入实时生效，不需要回车
+    Callback = function() end 
+})
+
+-- 辅助函数：统一刷新所有下拉列表
+local function ontp_UpdateAllDropdowns()
+    local list = {}
+    for name, _ in pairs(ontp_SavedLocations) do
+        table.insert(list, name)
+    end
+    if #list == 0 then list = {"无坐标"} end
+    
+    if Options.ontp_DeleteDropdown then Options.ontp_DeleteDropdown:SetValues(list) end
+    if Options.ontp_TPDropdown then Options.ontp_TPDropdown:SetValues(list) end
+    if Options.ontp_SeqAddDropdown then Options.ontp_SeqAddDropdown:SetValues(list) end
+end
+
+local function ontp_UpdateSequenceDropdown()
+    local seqList = {}
+    for i, name in ipairs(ontp_SequenceList) do
+        table.insert(seqList, tostring(i) .. ". " .. name)
+    end
+    if #seqList == 0 then seqList = {"列表为空"} end
+    if Options.ontp_SeqViewDropdown then Options.ontp_SeqViewDropdown:SetValues(seqList) end
+end
+
+-- 3. 记录坐标按钮 (修复覆盖与新建逻辑)
+Tabs.Qwqr:AddButton({
+    Title = "记录现在的坐标",
+    Callback = function()
+        -- 核心修复：直接实时获取 UI 选项里的值
+        local currentName = Options.ontp_SaveName and Options.ontp_SaveName.Value or ""
+        
+        if currentName == "" then
+            Fluent:Notify({Title = "错误", Content = "坐标名字不能为空", Duration = 2})
+            return
+        end
+        
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            -- 判断是否是覆盖旧点位
+            local isOverwrite = (ontp_SavedLocations[currentName] ~= nil)
+            
+            -- 保存或覆盖绝对坐标 (CFrame)
+            ontp_SavedLocations[currentName] = hrp.CFrame
+            ontp_UpdateAllDropdowns()
+            
+            if isOverwrite then
+                Fluent:Notify({Title = "成功", Content = "已覆盖旧坐标: " .. currentName, Duration = 2})
+            else
+                Fluent:Notify({Title = "成功", Content = "已记录新坐标: " .. currentName, Duration = 2})
+            end
+        else
+            Fluent:Notify({Title = "错误", Content = "未找到人物坐标", Duration = 2})
+        end
+    end
+})
+
+Tabs.Qwqr:AddSection("坐标")
+
+-- 4. 列表选择提供选中改坐标 (删除用)
+Tabs.Qwqr:AddDropdown("ontp_DeleteDropdown", {
+    Title = "选择坐标 (删除)",
+    Values = {"无坐标"},
+    Default = 1,
+    Callback = function(value)
+        ontp_SelectedForDelete = value
+    end
+})
+
+-- 5. 点击按钮将选中的坐标删除
+Tabs.Qwqr:AddButton({
+    Title = "删除坐标",
+    Callback = function()
+        if ontp_SelectedForDelete and ontp_SavedLocations[ontp_SelectedForDelete] then
+            ontp_SavedLocations[ontp_SelectedForDelete] = nil
+            ontp_SelectedForDelete = nil
+            ontp_UpdateAllDropdowns()
+            Fluent:Notify({Title = "成功", Content = "坐标已删除", Duration = 2})
+        else
+            Fluent:Notify({Title = "错误", Content = "未选中有效坐标", Duration = 2})
+        end
+    end
+})
+
+Tabs.Qwqr:AddSection("传送")
+
+-- 6. 列表选择需要传送的坐标
+Tabs.Qwqr:AddDropdown("ontp_TPDropdown", {
+    Title = "选择坐标 (传送)",
+    Values = {"无坐标"},
+    Default = 1,
+    Callback = function(value)
+        ontp_SelectedForTP = value
+    end
+})
+
+-- 7. 持续传送至选中的坐标
+Tabs.Qwqr:AddToggle("ontp_ContinuousTPToggle", {
+    Title = "持续传送",
+    Default = false,
+    Callback = function(state)
+        ontp_ContinuousTPEnabled = state
+    end
+})
+
+-- 8. 传送一次选中的坐标
+Tabs.Qwqr:AddButton({
+    Title = "▶ 传送一次",
+    Callback = function()
+        if ontp_ContinuousTPEnabled then
+            Fluent:Notify({Title = "提示", Content = "请先关闭持续传送", Duration = 2})
+            return
+        end
+        if ontp_SelectedForTP and ontp_SavedLocations[ontp_SelectedForTP] then
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = ontp_SavedLocations[ontp_SelectedForTP]
+            end
+        else
+            Fluent:Notify({Title = "错误", Content = "无效的坐标", Duration = 2})
+        end
+    end
+})
+
+-- 持续传送渲染循环
+RunService.Heartbeat:Connect(function()
+    if ontp_ContinuousTPEnabled and ontp_SelectedForTP and ontp_SavedLocations[ontp_SelectedForTP] then
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = ontp_SavedLocations[ontp_SelectedForTP]
+            hrp.Velocity = Vector3.new(0, 0, 0) -- 消除重力与惯性
+        end
+    end
+end)
+
+Tabs.Qwqr:AddSection("循环传送")
+
+-- 9. 列表选择将保存的坐标选中 (加入序列)
+Tabs.Qwqr:AddDropdown("ontp_SeqAddDropdown", {
+    Title = "选择坐标 (加入待传送列表)",
+    Values = {"无坐标"},
+    Default = 1,
+    Callback = function(value)
+        ontp_SelectedForSeqAdd = value
+    end
+})
+
+-- 10. 将选中的坐标保存至待传送的坐标
+Tabs.Qwqr:AddButton({
+    Title = "选入传送列表",
+    Callback = function()
+        if ontp_SelectedForSeqAdd and ontp_SavedLocations[ontp_SelectedForSeqAdd] then
+            table.insert(ontp_SequenceList, ontp_SelectedForSeqAdd)
+            ontp_UpdateSequenceDropdown()
+            Fluent:Notify({Title = "成功", Content = "已添加至队列结尾", Duration = 2})
+        else
+            Fluent:Notify({Title = "错误", Content = "无效的坐标", Duration = 2})
+        end
+    end
+})
+
+-- 11. 查看已经保存的坐标 (按传送顺序排位置)
+Tabs.Qwqr:AddDropdown("ontp_SeqViewDropdown", {
+    Title = "路线列表",
+    Values = {"列表为空"},
+    Default = 1,
+    Callback = function() end -- 仅做展示查看
+})
+
+Tabs.Qwqr:AddButton({
+    Title = "清空列表",
+    Callback = function()
+        ontp_SequenceList = {}
+        ontp_UpdateSequenceDropdown()
+        Fluent:Notify({Title = "提示", Content = "路线已清空", Duration = 2})
+    end
+})
+
+-- ★新增：传送间隔时间输入框
+Tabs.Qwqr:AddInput("ontp_SeqIntervalInput", {
+    Title = "间隔时间 (秒)",
+    Default = "1",
+    Numeric = true,
+    Finished = true,
+    Placeholder = "每次传送停顿多少秒...",
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num > 0 then
+            ontp_SeqInterval = num
+        else
+            ontp_SeqInterval = 1
+        end
+    end
+})
+
+-- 辅助函数：执行循环路线遍历
+local function ontp_ExecuteSequenceOnce()
+    if #ontp_SequenceList == 0 then
+        Fluent:Notify({Title = "错误", Content = "待传送列表为空", Duration = 2})
+        return
+    end
+    task.spawn(function()
+        for _, name in ipairs(ontp_SequenceList) do
+            local cf = ontp_SavedLocations[name]
+            if cf then
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then hrp.CFrame = cf end
+                task.wait(ontp_SeqInterval) -- 使用自定义时间间隔
+            end
+        end
+    end)
+end
+
+-- 12. 轮番传送一次列表内的坐标
+Tabs.Qwqr:AddButton({
+    Title = "传送一次",
+    Callback = function()
+        if ontp_SeqLoopEnabled then
+            Fluent:Notify({Title = "提示", Content = "请先关闭循环传送开关", Duration = 2})
+            return
+        end
+        ontp_ExecuteSequenceOnce()
+    end
+})
+
+-- 13. 循环传送列表内的坐标
+Tabs.Qwqr:AddToggle("ontp_SeqLoopToggle", {
+    Title = "循环传送",
+    Default = false,
+    Callback = function(state)
+        ontp_SeqLoopEnabled = state
+        if state then
+            if #ontp_SequenceList == 0 then
+                Fluent:Notify({Title = "提示", Content = "列表为空，无法循环", Duration = 2})
+                Options.ontp_SeqLoopToggle:SetValue(false)
+                return
+            end
+            
+            if ontp_SeqLoopThread then task.cancel(ontp_SeqLoopThread) end
+            
+            ontp_SeqLoopThread = task.spawn(function()
+                while ontp_SeqLoopEnabled do
+                    for _, name in ipairs(ontp_SequenceList) do
+                        if not ontp_SeqLoopEnabled then break end
+                        local cf = ontp_SavedLocations[name]
+                        if cf then
+                            local char = LocalPlayer.Character
+                            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                            if hrp then 
+                                hrp.CFrame = cf 
+                                hrp.Velocity = Vector3.new(0, 0, 0)
+                            end
+                            task.wait(ontp_SeqInterval) -- 使用自定义时间间隔
+                        end
+                    end
+                    task.wait(0.1) -- 缓冲防死循环
+                end
+            end)
+        else
+            if ontp_SeqLoopThread then 
+                task.cancel(ontp_SeqLoopThread)
+                ontp_SeqLoopThread = nil 
+            end
+        end
+    end
+})
+
+-- 初始化更新一下UI
+ontp_UpdateAllDropdowns()
+ontp_UpdateSequenceDropdown()
+
+local customFOVEnabled = false
+local customFOVValue = 70
+
+Tabs.FOV:AddToggle("CustomFOVToggle", {
+    Title = "开启FOV",
+    Default = false,
+    Callback = function(value)
+        customFOVEnabled = value
+        if value then
+            Camera.FieldOfView = customFOVValue
+        else
+            Camera.FieldOfView = 70
+        end
+    end
+})
+
+Tabs.FOV:AddSlider("CustomFOVSlider", {
+    Title = "FOV值",
+    Min = 1,
+    Max = 120,
+    Default = 70,
+    Rounding = 0,
+    Callback = function(value)
+        customFOVValue = value
+        if customFOVEnabled then
+            Camera.FieldOfView = value
+        end
+    end
+})
+    
+local originalMaxZoom = LocalPlayer.CameraMaxZoomDistance
+Tabs.FOV:AddToggle("UnlimitedZoom", {
+    Title = "无限视距",
+    Default = false,
+    Callback = function(value)
+        if value then
+            LocalPlayer.CameraMaxZoomDistance = math.huge
+        else
+            LocalPlayer.CameraMaxZoomDistance = originalMaxZoom or 400
+        end
+    end
+})
+
+
+
+
+
+
+-- ==========================================================
+-- 【UI构建】：强制第三人称视角功能
+-- ==========================================================
+if Tabs and Tabs.FOV then
+    Tabs.FOV:AddSection("视角破解")
+
+    -- 独立连接变量，防止内存泄漏
+    local QWQ_ThirdPerson_Connection = nil
+
+    Tabs.FOV:AddToggle("QWQ_ForceThirdPerson_Toggle", {
+        Title = "强制第三人称 (突破限制)",
+        Default = false,
+        Callback = function(QWQ_ThirdPerson_State)
+            if QWQ_ThirdPerson_State then
+                -- 1. 初始解锁：将相机模式改为经典模式，并放宽缩放限制
+                LocalPlayer.CameraMode = Enum.CameraMode.Classic
+                LocalPlayer.CameraMinZoomDistance = 5   -- 允许的最近距离
+                LocalPlayer.CameraMaxZoomDistance = 400 -- 允许的最远距离
+                
+                -- 2. 实时对抗：使用高频渲染循环，防止游戏本地脚本将视角再次锁死
+                QWQ_ThirdPerson_Connection = RunService.RenderStepped:Connect(function()
+                    -- 对抗相机模式锁定
+                    if LocalPlayer.CameraMode == Enum.CameraMode.LockFirstPerson then
+                        LocalPlayer.CameraMode = Enum.CameraMode.Classic
+                    end
+                    
+                    -- 对抗最大缩放距离锁定 (很多游戏会把MaxZoomDistance设为0.5来变相强制第一人称)
+                    if LocalPlayer.CameraMaxZoomDistance < 5 then
+                        LocalPlayer.CameraMaxZoomDistance = 400
+                    end
+                end)
+            else
+                -- 关闭功能：断开连接，停止强制覆盖
+                if QWQ_ThirdPerson_Connection then
+                    QWQ_ThirdPerson_Connection:Disconnect()
+                    QWQ_ThirdPerson_Connection = nil
+                end
+                
+                -- 可选：恢复默认缩放设置 (这里恢复为Roblox默认的128)
+                LocalPlayer.CameraMaxZoomDistance = 128
+            end
+        end
+    })
+end
+
+
+
+
+
+
+
+local faceLockConnection
+Tabs.FOV:AddToggle("FaceLock", {
+    Title = "视角锁",
+    Default = false,
+    Callback = function(value)
+        if faceLockConnection then
+            faceLockConnection:Disconnect()
+            faceLockConnection = nil
+        end
+        if value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            faceLockConnection = RunService.RenderStepped:Connect(function()
+                local hrp = LocalPlayer.Character.HumanoidRootPart
+                local camLook = Camera.CFrame.LookVector
+                hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(camLook.X, 0, camLook.Z))
+            end)
+        end
+    end
+})
+
+
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild("HumanoidRootPart")
+    if Options.FaceLock.Value then
+        if faceLockConnection then
+            faceLockConnection:Disconnect()
+        end
+        faceLockConnection = RunService.RenderStepped:Connect(function()
+            local hrp = character.HumanoidRootPart
+            local camLook = Camera.CFrame.LookVector
+            hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(camLook.X, 0, camLook.Z))
+        end)
+    end
+end)
+
+-- ==========================================
+-- 🧊 高级玩家碰撞箱系统 (Hitbox Module) - 触碰修复 + 死亡还原版
+-- ==========================================
+
+-- 核心：弱引用缓存表 (当物体被销毁时自动清理内存)
+local OriginalHitboxStates = setmetatable({}, {__mode = "k"})
+
+local HB_Player_Enabled = false
+local HB_Player_TeamCheck = true
+local HB_Player_Collide = false -- 是否变为实体
+local HB_Player_Size = 10
+local HB_Player_Trans = 0.5
+local HB_Player_Material = Enum.Material.SmoothPlastic
+local HB_Player_Color = Color3.fromRGB(255, 255, 255)
+
+local HB_Player_Blacklist = {}
+local HB_Player_SelectedServer = "无玩家"
+local HB_Player_SelectedBlacklist = "无玩家"
+
+-- 材质映射表
+local MaterialMap = {
+    ["普通方块"] = Enum.Material.SmoothPlastic,
+    ["玻璃材质"] = Enum.Material.Glass,
+    ["金属材质"] = Enum.Material.Metal,
+    ["霓虹发光"] = Enum.Material.Neon,
+    ["半透力场"] = Enum.Material.ForceField
+}
+
+-- ==========================================
+-- 🛠️ 核心辅助与恢复函数
+-- ==========================================
+-- 保存原始属性
+local function SaveOriginalState(hrp)
+    if not OriginalHitboxStates[hrp] then
+        OriginalHitboxStates[hrp] = {
+            Size = hrp.Size,
+            Transparency = hrp.Transparency,
+            Color = hrp.Color,
+            Material = hrp.Material,
+            CanCollide = hrp.CanCollide
+        }
+    end
+end
+
+-- 恢复原始属性
+local function RestoreHitbox(hrp)
+    local state = OriginalHitboxStates[hrp]
+    if state then
+        pcall(function()
+            hrp.Size = state.Size
+            hrp.Transparency = state.Transparency
+            hrp.Color = state.Color
+            hrp.Material = state.Material
+            hrp.CanCollide = state.CanCollide
+        end)
+    end
+end
+
+-- 恢复所有玩家
+local function RestoreAllPlayers()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then RestoreHitbox(hrp) end
+        end
+    end
+end
+
+-- ==========================================
+-- 🟢 UI 构建：玩家碰撞箱
+-- ==========================================
+Tabs.HITBOX:AddSection("玩家碰撞箱")
+
+Tabs.HITBOX:AddToggle("HB_Player_Toggle", {
+    Title = "玩家碰撞箱",
+    Default = false,
+    Callback = function(state)
+        HB_Player_Enabled = state
+        if not state then RestoreAllPlayers() end
+    end
+})
+
+Tabs.HITBOX:AddToggle("HB_Player_CollideToggle", {
+    Title = "实体",
+    Default = false,
+    Callback = function(state) HB_Player_Collide = state end
+})
+
+Tabs.HITBOX:AddToggle("HB_Player_TeamCheck", {
+    Title = "队伍检测",
+    Default = true,
+    Callback = function(state)
+        HB_Player_TeamCheck = state
+        if HB_Player_Enabled then RestoreAllPlayers() end
+    end
+})
+
+local HB_Player_SizeSlider = Tabs.HITBOX:AddSlider("HB_Player_SizeSlider", {
+    Title = "碰撞箱大小",
+    Min = 1, Max = 200, Default = 10, Rounding = 1,
+    Callback = function(value)
+        HB_Player_Size = value
+    end
+})
+
+Tabs.HITBOX:AddInput("HB_Player_SizeInput", {
+    Title = "碰撞箱大小",
+    Default = "10",
+    Numeric = true,
+    Finished = true,
+    Placeholder = "1~200",
+    Callback = function(value)
+        local num = tonumber(value)
+        if num then
+            num = math.clamp(num, 1, 200)
+            HB_Player_Size = num
+            Options.HB_Player_SizeSlider:SetValue(num) -- 同步滑动条
+        end
+    end
+})
+
+Tabs.HITBOX:AddSlider("HB_Player_TransSlider", {
+    Title = "碰撞箱透明度",
+    Min = 0, Max = 1, Default = 0.5, Rounding = 2,
+    Callback = function(value) HB_Player_Trans = value end
+})
+
+Tabs.HITBOX:AddDropdown("HB_Player_Material", {
+    Title = "碰撞箱材质",
+    Values = {"普通方块", "玻璃材质", "金属材质", "霓虹发光", "半透力场"},
+    Default = 1,
+    Callback = function(value)
+        HB_Player_Material = MaterialMap[value] or Enum.Material.SmoothPlastic
+    end
+})
+
+Tabs.HITBOX:AddColorpicker("HB_Player_Color", {
+    Title = "碰撞箱颜色",
+    Default = Color3.fromRGB(255, 255, 255),
+    Callback = function(value) HB_Player_Color = value end
+})
+
+-- 玩家黑名单系统
+Tabs.HITBOX:AddSection("玩家黑名单")
+
+local function UpdatePlayerBlacklistUI()
+    local serverList = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and not table.find(HB_Player_Blacklist, p.Name) then
+            table.insert(serverList, p.Name)
+        end
+    end
+    if #serverList == 0 then serverList = {"无玩家"} end
+    if Options.HB_Player_ServerList then Options.HB_Player_ServerList:SetValues(serverList) end
+
+    local blList = #HB_Player_Blacklist > 0 and HB_Player_Blacklist or {"无玩家"}
+    if Options.HB_Player_BlacklistUI then Options.HB_Player_BlacklistUI:SetValues(blList) end
+end
+
+Tabs.HITBOX:AddDropdown("HB_Player_ServerList", {
+    Title = "1. 选择服务器内玩家 (用户名)",
+    Values = {"无玩家"}, Default = 1,
+    Callback = function(value) HB_Player_SelectedServer = value end
+})
+
+Tabs.HITBOX:AddButton({
+    Title = "▶ 添加至玩家黑名单",
+    Callback = function()
+        if HB_Player_SelectedServer ~= "无玩家" and not table.find(HB_Player_Blacklist, HB_Player_SelectedServer) then
+            table.insert(HB_Player_Blacklist, HB_Player_SelectedServer)
+            
+            local p = Players:FindFirstChild(HB_Player_SelectedServer)
+            if p and p.Character then
+                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then RestoreHitbox(hrp) end
+            end
+            
+            UpdatePlayerBlacklistUI()
+            Fluent:Notify({Title = "成功", Content = "已将 " .. HB_Player_SelectedServer .. " 加入黑名单", Duration = 2})
+        end
+    end
+})
+
+Tabs.HITBOX:AddDropdown("HB_Player_BlacklistUI", {
+    Title = "2. 选择黑名单内的玩家",
+    Values = {"无玩家"}, Default = 1,
+    Callback = function(value) HB_Player_SelectedBlacklist = value end
+})
+
+Tabs.HITBOX:AddButton({
+    Title = "◀ 从黑名单中移除",
+    Callback = function()
+        local idx = table.find(HB_Player_Blacklist, HB_Player_SelectedBlacklist)
+        if idx then
+            table.remove(HB_Player_Blacklist, idx)
+            UpdatePlayerBlacklistUI()
+            Fluent:Notify({Title = "成功", Content = "已将 " .. HB_Player_SelectedBlacklist .. " 移出黑名单", Duration = 2})
+        else
+            Fluent:Notify({Title = "错误", Content = "未选中有效玩家", Duration = 2})
+        end
+    end
+})
+
+Players.PlayerAdded:Connect(UpdatePlayerBlacklistUI)
+Players.PlayerRemoving:Connect(UpdatePlayerBlacklistUI)
+UpdatePlayerBlacklistUI()
+
+-- ==========================================
+-- 🔄 核心引擎：碰撞箱修改与触碰模拟
+-- ==========================================
+
+-- 1. 物理放大循环 (实时修改碰撞箱状态 + 死亡监听还原)
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if HB_Player_Enabled then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character then
+                    -- 队伍与黑名单过滤
+                    if HB_Player_TeamCheck and p.Team == LocalPlayer.Team then continue end
+                    if table.find(HB_Player_Blacklist, p.Name) then continue end
+                    
+                    local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                    local hum = p.Character:FindFirstChild("Humanoid")
+                    
+                    if hrp and hum then
+                        if hum.Health > 0 then
+                            -- 存活状态：放大碰撞箱
+                            SaveOriginalState(hrp)
+                            hrp.Size = Vector3.new(HB_Player_Size, HB_Player_Size, HB_Player_Size)
+                            hrp.Transparency = HB_Player_Trans
+                            hrp.Color = HB_Player_Color
+                            hrp.Material = HB_Player_Material
+                            hrp.CanCollide = HB_Player_Collide
+                        else
+                            -- 死亡状态：玩家血量归零，立刻还原尸体的碰撞箱大小
+                            RestoreHitbox(hrp)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- 2. 模拟攻击触碰 (解决在巨大碰撞箱内部攻击无效的 Bug)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    -- 当玩家按下鼠标左键时触发
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if HB_Player_Enabled and firetouchinterest then
+            local char = LocalPlayer.Character
+            local tool = char and char:FindFirstChildOfClass("Tool")
+            
+            -- 寻找手中工具的伤害判定部位 (优先找 Handle)
+            local handle = tool and (tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart"))
+            
+            if handle then
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character then
+                        -- 同步过滤队友与黑名单
+                        if HB_Player_TeamCheck and p.Team == LocalPlayer.Team then continue end
+                        if table.find(HB_Player_Blacklist, p.Name) then continue end
+                        
+                        local targetHrp = p.Character:FindFirstChild("HumanoidRootPart")
+                        local hum = p.Character:FindFirstChildOfClass("Humanoid")
+                        
+                        if targetHrp and hum and hum.Health > 0 then
+                            -- 利用数学公式计算距离
+                            local dist = (targetHrp.Position - handle.Position).Magnitude
+                            
+                            -- 如果在目标扩大的碰撞箱范围内 (边长的一半 + 6 Studs 的武器容错长度)
+                            if dist <= (HB_Player_Size / 2) + 6 then
+                                task.spawn(function()
+                                    firetouchinterest(handle, targetHrp, 0) -- 模拟接触
+                                    task.wait(0.01)
+                                    firetouchinterest(handle, targetHrp, 1) -- 模拟接触结束
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+
+
+
+
+-- ==========================================
+-- 🔄 核心渲染引擎：处理修改逻辑
+-- ==========================================
+
+
+-- 2. 高频渲染线程：每 0.1 秒刷新碰撞箱状态
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        
+        if not HB_Player_Enabled and not HB_Monster_Enabled then
+            continue
+        end
+        
+        -- 玩家碰撞箱逻辑
+        if HB_Player_Enabled then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character then
+                    if HB_Player_TeamCheck and p.Team == LocalPlayer.Team then continue end
+                    if table.find(HB_Player_Blacklist, p.Name) then continue end
+                    
+                    local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                    local hum = p.Character:FindFirstChild("Humanoid")
+                    
+                    if hrp and hum and hum.Health > 0 then
+                        SaveOriginalState(hrp)
+                        hrp.Size = Vector3.new(HB_Player_Size, HB_Player_Size, HB_Player_Size)
+                        hrp.Transparency = HB_Player_Trans
+                        hrp.Color = HB_Player_Color
+                        hrp.Material = HB_Player_Material
+                        hrp.CanCollide = HB_Player_Collide -- 接入实体化开关
+                    end
+                end
+            end
+        end     
+    end
+end)
+
+-- ==========================================================
+-- 互动、触发、触碰系统 (完美适配 Fluent 版)
+-- ==========================================================
+if Tabs and Tabs.Interact then
+    Tabs.Interact:AddSection("核心机制")
+
+    local QWQ_Interact_ToggleInteract = Tabs.Interact:AddToggle("QWQ_Interact_ToggleInteract", { Title = "可互动 (ProximityPrompt/Click)", Default = false })
+    local QWQ_Interact_ToggleTrigger = Tabs.Interact:AddToggle("QWQ_Interact_ToggleTrigger", { Title = "可触发 (模拟触碰触发器)", Default = false })
+    local QWQ_Interact_ToggleTouch = Tabs.Interact:AddToggle("QWQ_Interact_ToggleTouch", { Title = "可触碰 (TouchInterest)", Default = false })
+
+    Tabs.Interact:AddSection("范围与可视化")
+    local QWQ_Interact_Range = 20
+    local QWQ_Interact_Shape = "圆形距离"
+
+    Tabs.Interact:AddInput("QWQ_Interact_RangeInput", {
+        Title = "范围半径 (距离)",
+        Default = "20",
+        Numeric = true,
+        Finished = false,
+        Placeholder = "输入数字...",
+        Callback = function(v) QWQ_Interact_Range = tonumber(v) or 20 end
+    })
+
+    Tabs.Interact:AddDropdown("QWQ_Interact_ShapeDropdown", {
+        Title = "范围形状",
+        Values = {"圆形距离", "正方形距离"},
+        Multi = false,
+        Default = 1,
+        Callback = function(v) QWQ_Interact_Shape = v end
+    })
+
+    local QWQ_Interact_VisualizerToggle = Tabs.Interact:AddToggle("QWQ_Interact_VisualizerToggle", { Title = "显示范围可视化", Default = false })
+    local QWQ_Interact_VisualizerColor = Tabs.Interact:AddColorpicker("QWQ_Interact_VisualizerColor", {
+        Title = "范围颜色",
+        Default = Color3.fromRGB(0, 255, 150)
+    })
+
+    Tabs.Interact:AddSection("执行控制")
+    local QWQ_Interact_ExecPerSec = 5
+    Tabs.Interact:AddSlider("QWQ_Interact_ExecPerSec", {
+        Title = "自动执行频率 (次/秒)",
+        Default = 5,
+        Min = 1,
+        Max = 60,
+        Rounding = 1,
+        Callback = function(v) QWQ_Interact_ExecPerSec = v end
+    })
+
+    local QWQ_Interact_AutoExecute = Tabs.Interact:AddToggle("QWQ_Interact_AutoExecute", { Title = "开启自动执行", Default = false })
+
+    -- 悬浮按钮设置
+    local QWQ_Interact_QuickBtnToggle = Tabs.Interact:AddToggle("QWQ_Interact_QuickBtnToggle", { Title = "显示悬浮快捷执行按钮", Default = false })
+    local QWQ_Interact_QuickBtnColor = Tabs.Interact:AddColorpicker("QWQ_Interact_QuickBtnColor", {
+        Title = "快捷执行按钮颜色",
+        Default = Color3.fromRGB(255, 255, 255)
+    })
+
+    -- 核心逻辑函数
+    local function IsInRange(partPos, hrpPos)
+        if QWQ_Interact_Shape == "圆形距离" then
+            return (partPos - hrpPos).Magnitude <= QWQ_Interact_Range
+        else
+            local diff = partPos - hrpPos
+            return math.abs(diff.X) <= QWQ_Interact_Range and math.abs(diff.Y) <= QWQ_Interact_Range and math.abs(diff.Z) <= QWQ_Interact_Range
+        end
+    end
+
+    local function ExecuteActions()
+        local touchCount, promptCount, clickCount = 0, 0, 0
+        local character = LocalPlayer.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return 0, 0, 0 end
+
+        local interactOn = Options.QWQ_Interact_ToggleInteract.Value
+        local triggerOn = Options.QWQ_Interact_ToggleTrigger.Value
+        local touchOn = Options.QWQ_Interact_ToggleTouch.Value
+
+        if not (interactOn or triggerOn or touchOn) then return 0, 0, 0 end
+
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            local isPart = obj:IsA("BasePart")
+            local isPrompt = obj:IsA("ProximityPrompt")
+            local isClick = obj:IsA("ClickDetector")
+
+            if isPart or isPrompt or isClick then
+                local targetPos = nil
+                if isPart then
+                    targetPos = obj.Position
+                elseif (isPrompt or isClick) and obj.Parent and obj.Parent:IsA("BasePart") then
+                    targetPos = obj.Parent.Position
+                end
+
+                if targetPos and IsInRange(targetPos, hrp.Position) then
+                    if interactOn then
+                        if isPrompt and fireproximityprompt then
+                            fireproximityprompt(obj, 1)
+                            promptCount = promptCount + 1
+                        elseif isClick and fireclickdetector then
+                            fireclickdetector(obj, 1)
+                            clickCount = clickCount + 1
+                        end
+                    end
+
+                    if (touchOn or triggerOn) and isPart and obj:FindFirstChildWhichIsA("TouchTransmitter") then
+                        if firetouchinterest then
+                            task.spawn(function()
+                                firetouchinterest(hrp, obj, 0)
+                                task.wait()
+                                firetouchinterest(hrp, obj, 1)
+                            end)
+                            touchCount = touchCount + 1
+                        end
+                    end
+                end
+            end
+        end
+        return touchCount, promptCount, clickCount
+    end
+
+local function ExecuteAndNotify()
+        local touches, prompts, clicks = ExecuteActions()
+        
+        -- 使用 pcall 保护原生弹窗，防止个别游戏禁用核心UI导致报错
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "已执行一次",
+                Text = string.format("触碰: %d | 互动: %d | 点击: %d", touches, prompts, clicks),
+                Icon = "rbxassetid://112498001988193",
+                Duration = 3
+            })
+        end)
+    end
+    Tabs.Interact:AddButton({
+        Title = "点击执行一次",
+        Description = "立即扫描范围并触发一次",
+        Callback = function()
+            ExecuteAndNotify()
+        end
+    })
+
+    -- ==========================================
+    -- 独立可拖动悬浮按钮 UI (防报错版)
+    -- ==========================================
+    local function GetSafeUI()
+        if gethui then
+            local s, r = pcall(gethui)
+            if s and r then return r end
+        end
+        local s, r = pcall(function() return game:GetService("CoreGui") end)
+        if s and r then return r end
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    local quickGui = Instance.new("ScreenGui")
+    quickGui.Name = "QWQ_Interact_QuickUI"
+    quickGui.ResetOnSpawn = false
+    quickGui.Parent = GetSafeUI()
+
+    local quickBtn = Instance.new("TextButton")
+    quickBtn.Size = UDim2.new(0, 30, 0, 20)
+    quickBtn.Position = UDim2.new(0, 10, 0, 10)
+    quickBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    quickBtn.Text = ""
+    quickBtn.AutoButtonColor = true
+    quickBtn.Visible = false
+    quickBtn.Parent = quickGui
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    btnCorner.Parent = quickBtn
+
+    local btnIcon = Instance.new("ImageLabel")
+    btnIcon.Size = UDim2.new(0.6, 0, 0.9, 0)
+    btnIcon.Position = UDim2.new(0.2, 0, 0.05, 0)
+    btnIcon.BackgroundTransparency = 1
+    btnIcon.Image = "rbxassetid://87761482164390" -- 标签图标
+    btnIcon.ScaleType = Enum.ScaleType.Fit
+    btnIcon.Parent = quickBtn
+
+    local dragging, dragInput, dragStart, startPos
+    quickBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = quickBtn.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    quickBtn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            quickBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    quickBtn.MouseButton1Click:Connect(function()
+        ExecuteAndNotify()
+    end)
+
+    QWQ_Interact_QuickBtnToggle:OnChanged(function()
+        quickBtn.Visible = Options.QWQ_Interact_QuickBtnToggle.Value
+    end)
+
+    QWQ_Interact_QuickBtnColor:OnChanged(function()
+        quickBtn.BackgroundColor3 = Options.QWQ_Interact_QuickBtnColor.Value
+    end)
+
+    -- ==========================================
+    -- 范围可视化系统 (安全退避版)
+    -- ==========================================
+    local secureFolder = Instance.new("Folder")
+    secureFolder.Name = "QWQ_Interact_Visualizer"
+    secureFolder.Parent = Camera -- 直接放在当前相机，防屏蔽且最稳妥
+
+    local sphereVisualizer = Instance.new("SphereHandleAdornment")
+    sphereVisualizer.ZIndex = 1
+    sphereVisualizer.AlwaysOnTop = true
+    sphereVisualizer.Transparency = 0.6
+    sphereVisualizer.Parent = secureFolder
+
+    local boxVisualizer = Instance.new("BoxHandleAdornment")
+    boxVisualizer.ZIndex = 1
+    boxVisualizer.AlwaysOnTop = true
+    boxVisualizer.Transparency = 0.6
+    boxVisualizer.Parent = secureFolder
+
+    RunService.RenderStepped:Connect(function()
+        local isEnabled = Options.QWQ_Interact_VisualizerToggle and Options.QWQ_Interact_VisualizerToggle.Value
+        local character = LocalPlayer.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+        if isEnabled and hrp then
+            local radius = QWQ_Interact_Range
+            local color = Options.QWQ_Interact_VisualizerColor and Options.QWQ_Interact_VisualizerColor.Value or Color3.fromRGB(0,255,150)
+            
+            if QWQ_Interact_Shape == "圆形距离" then
+                boxVisualizer.Visible = false
+                sphereVisualizer.Visible = true
+                sphereVisualizer.Adornee = hrp
+                sphereVisualizer.Radius = radius
+                sphereVisualizer.Color3 = color
+            else
+                sphereVisualizer.Visible = false
+                boxVisualizer.Visible = true
+                boxVisualizer.Adornee = hrp
+                boxVisualizer.Size = Vector3.new(radius * 2, radius * 2, radius * 2)
+                boxVisualizer.Color3 = color
+            end
+        else
+            sphereVisualizer.Visible = false
+            boxVisualizer.Visible = false
+            sphereVisualizer.Adornee = nil
+            boxVisualizer.Adornee = nil
+        end
+    end)
+
+    -- 自动执行任务循环
+    task.spawn(function()
+        while true do
+            if Options.QWQ_Interact_AutoExecute and Options.QWQ_Interact_AutoExecute.Value then
+                ExecuteActions()
+                task.wait(1 / QWQ_Interact_ExecPerSec)
+            else
+                task.wait(0.1)
+            end
+        end
+    end)
+end
+
+Tabs.Interact:AddSection("全图全自动互动")
+
+local autoLoopThread = nil
+local autoProxState = false
+local autoClickState = false
+local autoTouchState = false
+
+-- 【新增】专门用来备份每个 ProximityPrompt 原本互动时间的对照表
+local originalPromptDurations = {}
+
+-- 辅助函数：一键还原所有被修改过的 E 键互动时间
+local function restorePromptDurations()
+    for prompt, originalDuration in pairs(originalPromptDurations) do
+        pcall(function()
+            if prompt and prompt.Parent then
+                prompt.HoldDuration = originalDuration
+            end
+        end)
+    end
+    table.clear(originalPromptDurations) -- 还原后清空备份表
+end
+
+-- 全图循环扫描核心逻辑
+local function startAutoInteractLoop()
+    if autoLoopThread then return end
+    autoLoopThread = task.spawn(function()
+        local lastTouch = 0
+        while autoProxState or autoClickState or autoTouchState do
+            pcall(function()
+                local descendants = workspace:GetDescendants()
+                for i, obj in ipairs(descendants) do
+                    if i % 200 == 0 then task.wait() end -- 防卡死
+                    
+                    -- 【已修改】E键互动：改为“秒互动”模式，不再全图自动触发
+                    if autoProxState and obj:IsA("ProximityPrompt") then
+                        pcall(function()
+                            -- 如果这个E键以前没有被备份过时间，就记录它的原本长按时间
+                            if originalPromptDurations[obj] == nil then
+                                originalPromptDurations[obj] = obj.HoldDuration
+                            end
+                            -- 强行将长按时间改成 0（实现走过去按E直接秒开）
+                            obj.HoldDuration = 0
+                        end)
+                    end
+                    
+                    -- 点击互动
+                    if autoClickState and obj:IsA("ClickDetector") then
+                        task.spawn(fireclickdetector, obj)
+                    end
+                    
+                    -- 触碰互动（过滤致死）
+                    if autoTouchState and (tick() - lastTouch > 0.5) then
+                        if obj:IsA("TouchTransmitter") and obj.Parent and obj.Parent:IsA("BasePart") then
+                            local part = obj.Parent
+                            local nLower = string.lower(part.Name)
+                            if not string.find(nLower, "kill") and not string.find(nLower, "lava") and not string.find(nLower, "岩浆") then
+                                local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                if myRoot then
+                                    task.spawn(function()
+                                        firetouchinterest(myRoot, part, 0)
+                                        task.wait(0.01)
+                                        firetouchinterest(myRoot, part, 1)
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end
+                if autoTouchState then lastTouch = tick() end
+            end)
+            task.wait(1) -- 每秒轮巡一次
+        end
+        autoLoopThread = nil
+    end)
+end
+
+-- 添加 UI 控件开关
+Tabs.Interact:AddToggle("AutoProx_Toggle", {
+    Title = "本地E键秒互动 (无需长按)",
+    Description = "开启后靠近任何物品按E直接秒开，关闭后恢复原有交互时间",
+    Default = false,
+    Callback = function(v)
+        autoProxState = v
+        if v then 
+            startAutoInteractLoop() 
+            Fluent:Notify({Title = "秒互动已开启", Content = "现在靠近物品按E无需等待圈圈转完", Duration = 3})
+        else
+            -- 【核心逻辑】关闭开关时，立刻触发还原函数，并清空临时备份
+            restorePromptDurations()
+            Fluent:Notify({Title = "秒互动已关闭", Content = "所有交互已安全恢复原本的时间", Duration = 3})
+        end
+    end
+})
