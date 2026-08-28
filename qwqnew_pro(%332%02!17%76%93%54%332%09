@@ -713,8 +713,6 @@ RunService.RenderStepped:Connect(function()
 end)
 
 
-Tabs.Qwqa:AddSection("屏幕贴边数据显示")
-
 Tabs.Qwqa:AddToggle("ShowFPS_Toggle", { 
     Title = "显示帧率 (FPS)", 
     Description = "屏幕右上角显示实时FPS", 
@@ -722,7 +720,6 @@ Tabs.Qwqa:AddToggle("ShowFPS_Toggle", {
     Callback = function(v) FPSLabel.Visible = v end 
 })
 
-Tabs.Qwqa:AddSection("防掉线系统")
 
 local antiAfkLoop = nil
 local antiAfkEnabled = false
@@ -762,9 +759,56 @@ Tabs.Qwqa:AddButton({
 loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/tpfly.lua"))()
     end
 })
+Tabs.Qwqa:AddButton({
+    Title = "点击传送工具",
+    Callback = function()
+mouse = game.Players.LocalPlayer:GetMouse() tool = Instance.new("Tool") tool.RequiresHandle = false tool.Name = "ฅ=ܫ´=ฅ传送工具" tool.Activated:connect(function() local pos = mouse.Hit+Vector3.new(0,2.5,0) pos = CFrame.new(pos.X,pos.Y,pos.Z) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = pos end) tool.Parent = game.Players.LocalPlayer.Backpack
+    end
+})
 
+Tabs.Qwqa:AddSection("喵ฅ( ̳• ·̫ • ̳ฅ)")
 
+local QWQ_Original_FPDH = workspace.FallenPartsDestroyHeight
 
+Tabs.Qwqa:AddToggle("AntiVoid_Toggle", {
+    Title = "免疫虚空伤害 (防掉落死亡)",
+    Description = "开启后掉出地图边界将一直下落，不会死亡",
+    Default = false,
+    Callback = function(state)
+        if state then
+            -- 备份地图原本的虚空死亡高度
+            QWQ_Original_FPDH = workspace.FallenPartsDestroyHeight
+            
+            -- 利用 0/0 (NaN) 破坏底层高度判定逻辑，实现完全免疫
+            workspace.FallenPartsDestroyHeight = 0/0
+            
+            Fluent:Notify({Title = "提示", Content = "虚空免疫已开启", Duration = 2})
+        else
+            -- 恢复原本的高度限制
+            workspace.FallenPartsDestroyHeight = QWQ_Original_FPDH
+            
+            Fluent:Notify({Title = "提示", Content = "虚空免疫已关闭", Duration = 2})
+        end
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "重置人物 (自杀)",
+    Description = "瞬间将人物血量清零，用于卡住时快速重生",
+    Callback = function()
+        -- 使用 pcall 防止人物还没加载出来时点击报错
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.Health = 0
+                    Fluent:Notify({Title = "提示", Content = "已重置人物", Duration = 2})
+                end
+            end
+        end)
+    end
+})
 
 -- 核心状态与缓存
 local QWQ_AirWalk_Enabled = false
@@ -1007,8 +1051,112 @@ if LocalPlayer.Character then
     SetupDeathListener(LocalPlayer.Character)
 end
 
--- 保持停留在第一个标签页
-Window:SelectTab(1)
+Tabs.Qwqa:AddSection("飞车")
+
+local QWQ_LegacyFly_Enabled = false
+local QWQ_LegacyFly_Speed = 50
+local QWQ_LegacyFly_Loop = nil
+local QWQ_BV = nil
+local QWQ_BG = nil
+
+local function StopLegacyFly()
+    if QWQ_LegacyFly_Loop then
+        QWQ_LegacyFly_Loop:Disconnect()
+        QWQ_LegacyFly_Loop = nil
+    end
+    if QWQ_BV then QWQ_BV:Destroy(); QWQ_BV = nil end
+    if QWQ_BG then QWQ_BG:Destroy(); QWQ_BG = nil end
+end
+
+Tabs.Qwqa:AddToggle("LegacyVehicleFly_Toggle", {
+    Title = "开启 飞车 (原汁原味)",
+    Description = "使用原版的 BodyGyro 锁定相机视角原理",
+    Default = false,
+    Callback = function(state)
+        QWQ_LegacyFly_Enabled = state
+        if state then
+            StopLegacyFly() -- 防止重复开启产生残留
+            
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
+            
+            -- 智能挂载：如果在车上，就把引擎装在车底盘；如果在步行，就装在人身上
+            local root = hum.RootPart
+            if hum.SeatPart then
+                root = hum.SeatPart.AssemblyRootPart or hum.SeatPart
+            end
+            if not root then return end
+            
+            -- 完全复刻原版的 BodyVelocity
+            QWQ_BV = Instance.new("BodyVelocity")
+            QWQ_BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            QWQ_BV.Velocity = Vector3.new(0, 0, 0)
+            QWQ_BV.Parent = root
+            
+            -- 完全复刻原版的 BodyGyro
+            QWQ_BG = Instance.new("BodyGyro")
+            QWQ_BG.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            QWQ_BG.D = 5000
+            QWQ_BG.P = 100000
+            QWQ_BG.CFrame = Camera.CFrame
+            QWQ_BG.Parent = root
+            
+            QWQ_LegacyFly_Loop = RunService.RenderStepped:Connect(function()
+                if not QWQ_LegacyFly_Enabled or not root or not root.Parent then
+                    StopLegacyFly()
+                    return
+                end
+                
+                -- 原版原理：强制将物体朝向锁死为相机的朝向
+                QWQ_BG.CFrame = Camera.CFrame
+                
+                -- 速度计算 (支持键盘 W/S)
+                local speedMult = 0
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    speedMult = 1
+                elseif UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    speedMult = -1
+                end
+                
+                -- 兼容手机端摇杆推力
+                if speedMult == 0 and hum.MoveDirection.Magnitude > 0 then
+                    local dotF = hum.MoveDirection:Dot((Camera.CFrame.LookVector * Vector3.new(1,0,1)).Unit)
+                    if dotF > 0.3 then speedMult = 1 elseif dotF < -0.3 then speedMult = -1 end
+                end
+                
+                -- 原版原理：顺着相机视角前进或后退
+                QWQ_BV.Velocity = Camera.CFrame.LookVector * (speedMult * QWQ_LegacyFly_Speed)
+            end)
+        else
+            StopLegacyFly()
+            -- 恢复物理掉落
+            pcall(function()
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    local root = hum.SeatPart and (hum.SeatPart.AssemblyRootPart or hum.SeatPart) or hum.RootPart
+                    if root then
+                        root.Velocity = Vector3.new(0, 0, 0)
+                        root.RotVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+Tabs.Qwqa:AddSlider("LegacyVehicleFly_Speed", {
+    Title = "飞车速度",
+    Min = 1,
+    Max = 500,
+    Default = 50,
+    Rounding = 0,
+    Callback = function(value)
+        QWQ_LegacyFly_Speed = value
+    end
+})
+
 
 
 Tabs.Qwqa:AddButton({
@@ -1046,24 +1194,11 @@ loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield
     end
 })
 
-Tabs.Qwqa:AddButton({
-    Title = "踏空",
-    Callback = function()
-loadstring(game:HttpGet('https://raw.githubusercontent.com/GhostPlayer352/Test4/main/Float'))()
-    end
-})
 
 Tabs.Qwqa:AddButton({
     Title = "删材质",
     Callback = function()
 loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-FpsBoost-9260"))()
-    end
-})
-
-Tabs.Qwqa:AddButton({
-    Title = "点击传送工具",
-    Callback = function()
-mouse = game.Players.LocalPlayer:GetMouse() tool = Instance.new("Tool") tool.RequiresHandle = false tool.Name = "ฅ=ܫ´=ฅ传送工具" tool.Activated:connect(function() local pos = mouse.Hit+Vector3.new(0,2.5,0) pos = CFrame.new(pos.X,pos.Y,pos.Z) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = pos end) tool.Parent = game.Players.LocalPlayer.Backpack
     end
 })
 
