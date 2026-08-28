@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.8优化版",
+    SubTitle = "7.9优化版",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -1051,7 +1051,7 @@ if LocalPlayer.Character then
     SetupDeathListener(LocalPlayer.Character)
 end
 
-Tabs.Qwqa:AddSection("飞车")
+
 
 local QWQ_LegacyFly_Enabled = false
 local QWQ_LegacyFly_Speed = 50
@@ -1157,6 +1157,97 @@ Tabs.Qwqa:AddSlider("LegacyVehicleFly_Speed", {
     end
 })
 
+local QWQ_Fly_Enabled = false
+local QWQ_Fly_Speed = 50
+local QWQ_Fly_Connection = nil
+
+Tabs.Qwqa:AddToggle("VehicleFly_Toggle", {
+    Title = "载具飞行协调",
+    Description = "兼容步行与驾驶状态。彻底修复视角疯狂自转的Bug。",
+    Default = false,
+    Callback = function(state)
+        QWQ_Fly_Enabled = state
+        if state then
+            QWQ_Fly_Connection = RunService.Heartbeat:Connect(function()
+                if not QWQ_Fly_Enabled then return end
+                
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if not hum then return end
+                
+                -- 智能物理识别：如果坐在车上，则控制载具主部件；否则控制人物自身
+                local root = hum.RootPart
+                if hum.SeatPart then
+                    root = hum.SeatPart.AssemblyRootPart or hum.SeatPart
+                end
+                if not root then return end
+                
+                -- 捕捉玩家的移动意图
+                local moveDir = Vector3.new(0, 0, 0)
+                
+                -- 电脑端 (WASD + 上下)
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + Camera.CFrame.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - Camera.CFrame.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - Camera.CFrame.RightVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Camera.CFrame.RightVector end
+                
+                -- 兼容手机端摇杆 (当没有键盘按键，但摇杆有推力时)
+                if moveDir.Magnitude == 0 and hum.MoveDirection.Magnitude > 0 then
+                    -- 将平面的摇杆推力，精准换算为当前相机的 3D 视角推力
+                    local flatLook = (Camera.CFrame.LookVector * Vector3.new(1,0,1)).Unit
+                    local flatRight = (Camera.CFrame.RightVector * Vector3.new(1,0,1)).Unit
+                    local dotF = hum.MoveDirection:Dot(flatLook)
+                    local dotR = hum.MoveDirection:Dot(flatRight)
+                    moveDir = (Camera.CFrame.LookVector * dotF) + (Camera.CFrame.RightVector * dotR)
+                end
+                
+                if moveDir.Magnitude > 0 then
+                    moveDir = moveDir.Unit
+                    root.Velocity = moveDir * QWQ_Fly_Speed
+                    
+                    -- 【防自转黑科技】：只在移动时让车头平滑(Lerp)顺应移动方向，彻底解除与相机的死循环绑定
+                    local targetCFrame = CFrame.new(root.Position, root.Position + moveDir)
+                    root.CFrame = root.CFrame:Lerp(targetCFrame, 0.1)
+                else
+                    -- 悬停机制：无输入时立刻清除速度与重力自转，稳如泰山
+                    root.Velocity = Vector3.new(0, 0, 0)
+                    root.RotVelocity = Vector3.new(0, 0, 0)
+                end
+            end)
+        else
+            -- 关闭时安全清理
+            if QWQ_Fly_Connection then
+                QWQ_Fly_Connection:Disconnect()
+                QWQ_Fly_Connection = nil
+            end
+            
+            -- 恢复物理引擎接管 (掉落回地面)
+            pcall(function()
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    local root = hum.SeatPart and (hum.SeatPart.AssemblyRootPart or hum.SeatPart) or hum.RootPart
+                    if root then
+                        root.Velocity = Vector3.new(0, 0, 0)
+                        root.RotVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+Tabs.Qwqa:AddSlider("VehicleFly_Speed", {
+    Title = "飞行速度",
+    Min = 1,
+    Max = 500,
+    Default = 50,
+    Rounding = 0,
+    Callback = function(value)
+        QWQ_Fly_Speed = value
+    end
+})
+
 
 
 Tabs.Qwqa:AddButton({
@@ -1232,11 +1323,7 @@ loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
 
 
 
-Tabs.Qwqa:AddToggle("ProxInstant", {
-    Title = "瞬时互动",
-    Default = false,
-    Callback = function(v) proximityInstantEnabled = v; setupProximityInstant(v) end
-})
+
 
 
 
@@ -2418,6 +2505,12 @@ Tabs.Interact:AddToggle("AutoProx_Toggle", {
             Fluent:Notify({Title = "秒互动已关闭", Content = "所有交互已安全恢复原本的时间", Duration = 3})
         end
     end
+})
+
+Tabs.Interact:AddToggle("ProxInstant", {
+    Title = "瞬时互动",
+    Default = false,
+    Callback = function(v) proximityInstantEnabled = v; setupProximityInstant(v) end
 })
 -- ==========================================
 -- 🟢 核心自瞄变量与 FOV 准星创建
