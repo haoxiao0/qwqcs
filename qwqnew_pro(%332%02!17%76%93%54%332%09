@@ -4,9 +4,9 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.9优化版",
+    SubTitle = "7.9.1优化版",
     TabWidth = 100,
-    Size = UDim2.fromOffset(450, 400),
+    Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
     Theme = "Sunset",
     MinimizeKey = Enum.KeyCode.LeftControl
@@ -632,8 +632,8 @@ Tabs.Player:AddToggle("PlayerNoclip_Toggle", {
 })
 
 
+Tabs.Qwqa:AddSection("喵ฅ( ̳• ·̫ • ̳ฅ)")
 
-Tabs.Qwqa:AddSection("测试工具")
 Tabs.Qwqa:AddButton({
     Title = "正在开发中的UI(hx)",
     Callback = function()
@@ -721,37 +721,42 @@ Tabs.Qwqa:AddToggle("ShowFPS_Toggle", {
 })
 
 
-local antiAfkLoop = nil
-local antiAfkEnabled = false
+Tabs.Qwqa:AddSection("系统保护")
 
-Tabs.Qwqa:AddToggle("AntiAfkToggle", {
-    Title = "高级防踢出 (18分钟防暂离)",
-    Description = "每18分钟静默自动按3次W键，极其安全",
+local QWQ_AntiAFK_Connection = nil
+
+Tabs.Qwqa:AddToggle("AntiAFK_Toggle", {
+    Title = "防挂机踢出",
+    Description = "静默运行，挂机超过20分钟也不会被服务器自动踢出",
     Default = false,
     Callback = function(state)
-        antiAfkEnabled = state
         if state then
-            antiAfkLoop = task.spawn(function()
-                while antiAfkEnabled do
-                    task.wait(1080)
-                    if not antiAfkEnabled then break end
-                    for i = 1, 3 do
-                        pcall(function()
-                            VirtualUser:CaptureController()
-                            VirtualUser:SetKeyDown("w")
-                            task.wait(0.1)
-                            VirtualUser:SetKeyUp("w")
-                        end)
-                        task.wait(0.3)
-                    end
-                end
-            end)
+            if not QWQ_AntiAFK_Connection then
+                local VirtualUser = game:GetService("VirtualUser")
+                local LocalPlayer = game:GetService("Players").LocalPlayer
+                
+                -- 监听玩家闲置事件
+                QWQ_AntiAFK_Connection = LocalPlayer.Idled:Connect(function()
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.new()) -- 模拟鼠标右键点击防踢
+                end)
+                
+                pcall(function()
+                    Fluent:Notify({Title = "提示", Content = "防挂机保护已开启", Duration = 2})
+                end)
+            end
         else
-            if antiAfkLoop then task.cancel(antiAfkLoop); antiAfkLoop = nil end
+            if QWQ_AntiAFK_Connection then
+                QWQ_AntiAFK_Connection:Disconnect()
+                QWQ_AntiAFK_Connection = nil
+                
+                pcall(function()
+                    Fluent:Notify({Title = "提示", Content = "防挂机保护已关闭", Duration = 2})
+                end)
+            end
         end
     end
 })
-
 
 Tabs.Qwqa:AddButton({
     Title = "tp飞行",
@@ -766,7 +771,7 @@ mouse = game.Players.LocalPlayer:GetMouse() tool = Instance.new("Tool") tool.Req
     end
 })
 
-Tabs.Qwqa:AddSection("喵ฅ( ̳• ·̫ • ̳ฅ)")
+
 
 local QWQ_Original_FPDH = workspace.FallenPartsDestroyHeight
 
