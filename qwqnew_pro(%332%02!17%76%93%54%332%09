@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.9.1优化版",
+    SubTitle = "7.9.2优化版",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -815,7 +815,6 @@ Tabs.Qwqa:AddButton({
     end
 })
 
--- 核心状态与缓存
 local QWQ_AirWalk_Enabled = false
 local QWQ_AirWalk_Part = nil
 local QWQ_AirWalk_Connection = nil
@@ -836,6 +835,20 @@ local function GetSafeUIContainer()
     local s, r = pcall(function() return game:GetService("CoreGui") end)
     if s and r then return r end
     return LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- ==========================================
+-- 0. 辅助：动态乱码生成器
+-- ==========================================
+local function GenerateRandomName()
+    local length = math.random(50, 60)
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}|:<>?~-=[]😀😃😄😁😆😇"
+    local str = ""
+    for i = 1, length do
+        local randIndex = math.random(1, #chars)
+        str = str .. string.sub(chars, randIndex, randIndex)
+    end
+    return str
 end
 
 -- ==========================================
@@ -880,7 +893,7 @@ local function CreateMiniButton()
                 local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then QWQ_AirWalk_CurrentY = hrp.Position.Y - 3.5 end
                 QWQ_AirWalk_Part.CanCollide = true
-                QWQ_AirWalk_Part.Transparency = 0.6 -- 固定隐隐约约可见
+                QWQ_AirWalk_Part.Transparency = 0.85 -- 调高透明度，让方块更加隐约
             end
         else
             QWQ_MiniBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
@@ -900,7 +913,7 @@ local function CreateMiniButton()
     table.insert(QWQ_MiniBtn_DragConnections, QWQ_MiniBtn.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true 
-            dragInput = input -- 绑定特定的触控点
+            dragInput = input 
             dragStart = input.Position 
             startPos = QWQ_MiniBtn.Position
         end
@@ -929,6 +942,7 @@ local function StopAirWalk()
         QWQ_AirWalk_Connection:Disconnect()
         QWQ_AirWalk_Connection = nil
     end
+    -- 彻底销毁平台方块，未开启绝不残留
     if QWQ_AirWalk_Part then
         QWQ_AirWalk_Part:Destroy()
         QWQ_AirWalk_Part = nil
@@ -946,18 +960,33 @@ local function StartAirWalk()
     QWQ_AirWalk_CurrentY = hrp and (hrp.Position.Y - 3.5) or 0
 
     QWQ_AirWalk_Part = Instance.new("Part")
-    QWQ_AirWalk_Part.Name = "QWQ_AirWalk_Platform"
-    QWQ_AirWalk_Part.Size = Vector3.new(2, 1, 2) -- 固化大小为2
+    QWQ_AirWalk_Part.Name = GenerateRandomName()
+    QWQ_AirWalk_Part.Size = Vector3.new(2, 1, 2) 
     QWQ_AirWalk_Part.Anchored = true
     QWQ_AirWalk_Part.CanCollide = false
     QWQ_AirWalk_Part.Transparency = 1
     QWQ_AirWalk_Part.Material = Enum.Material.Neon
-    QWQ_AirWalk_Part.Color = Color3.fromRGB(135, 206, 235) 
     QWQ_AirWalk_Part.Parent = workspace
+
+    local lastRenameTime = tick()
 
     QWQ_AirWalk_Connection = RunService.Heartbeat:Connect(function()
         if not QWQ_AirWalk_Enabled or not QWQ_AirWalk_Part or not QWQ_AirWalk_Part.Parent then
             StopAirWalk() return
+        end
+
+        local currentTick = tick()
+        
+        -- 💡 每隔 1 秒更新一次 50-60 位乱码名字
+        if currentTick - lastRenameTime >= 1 then
+            QWQ_AirWalk_Part.Name = GenerateRandomName()
+            lastRenameTime = currentTick
+        end
+
+        -- 💡 动态马卡龙色渐变 (低饱和度, 高明度)
+        if QWQ_MiniBtn_State then
+            local hue = (currentTick % 5) / 5 -- 5秒一个颜色循环
+            QWQ_AirWalk_Part.Color = Color3.fromHSV(hue, 0.35, 1) -- 0.35饱和度和1的明度带来马卡龙质感
         end
 
         local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -984,7 +1013,7 @@ end
 -- ==========================================
 Tabs.Qwqa:AddToggle("QWQ_AirWalk_Toggle", {
     Title = "开启 踏空行走",
-    Description = "生成快捷悬浮按钮：红色(下落) / 青蓝色(空中托底)",
+    Description = "ฅ( ̳• ·̫ • ̳ฅ)ᐡ•͈ ·̭ •͈ᐡ",
     Default = false,
     Callback = function(state)
         QWQ_AirWalk_Enabled = state
@@ -995,7 +1024,6 @@ Tabs.Qwqa:AddToggle("QWQ_AirWalk_Toggle", {
         end
     end
 })
-
 
 local QWQ_DeathTP_Enabled = false
 local QWQ_SavedDeathLocation = nil
