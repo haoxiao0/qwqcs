@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.9.2优化版",
+    SubTitle = "7.9.6优化版",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -1356,9 +1356,329 @@ loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
 
 
 
+if Tabs and Tabs.Qwqa then
+    Tabs.Qwqa:AddSection("🕹️ 虚拟摇杆与按键 (360度丝滑原生版)")
 
+    local function GetSafeUIContainer()
+        if gethui then
+            local s, r = pcall(gethui)
+            if s and r then return r end
+        end
+        local s, r = pcall(function() return game:GetService("CoreGui") end)
+        if s and r then return r end
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
 
+    local DPadGui = GetSafeUIContainer():FindFirstChild("QWQ_Joystick_GUI")
+    if DPadGui then DPadGui:Destroy() end 
+    
+    DPadGui = Instance.new("ScreenGui")
+    DPadGui.Name = "QWQ_Joystick_GUI"
+    DPadGui.Parent = GetSafeUIContainer()
+    DPadGui.ResetOnSpawn = false
+    DPadGui.Enabled = false
 
+    local BaseSize = 220
+    local KnobSize = math.floor(BaseSize * (2/5))
+    local LetterLabels = {} 
+    
+    local JumpBtnSize = 100
+    local JumpBtnDraggable = false
+
+    -- ==========================================
+    -- 摇杆模块构建
+    -- ==========================================
+    local JoystickBase = Instance.new("Frame")
+    JoystickBase.Name = "JoystickBase"
+    JoystickBase.Parent = DPadGui
+    JoystickBase.Size = UDim2.new(0, BaseSize, 0, BaseSize)
+    JoystickBase.AnchorPoint = Vector2.new(0, 1) 
+    JoystickBase.Position = UDim2.new(0, 60, 1, -60) 
+    JoystickBase.BackgroundColor3 = Color3.fromRGB(240, 240, 245) 
+    JoystickBase.BackgroundTransparency = 0.65 
+    JoystickBase.BorderSizePixel = 0
+    JoystickBase.Active = true
+
+    local BaseCorner = Instance.new("UICorner")
+    BaseCorner.CornerRadius = UDim.new(0, 30) 
+    BaseCorner.Parent = JoystickBase
+
+    local BaseStroke = Instance.new("UIStroke")
+    BaseStroke.Color = Color3.fromRGB(255, 255, 255)
+    BaseStroke.Transparency = 0.5
+    BaseStroke.Thickness = 1.5
+    BaseStroke.Parent = JoystickBase
+
+    local DeadZoneRadius = BaseSize / 8
+    local DeadZoneCircle = Instance.new("Frame")
+    DeadZoneCircle.Size = UDim2.new(0, DeadZoneRadius * 2, 0, DeadZoneRadius * 2)
+    DeadZoneCircle.Position = UDim2.new(0.5, 0, 0.5, 0)
+    DeadZoneCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+    DeadZoneCircle.BackgroundTransparency = 1
+    DeadZoneCircle.ZIndex = 2
+    DeadZoneCircle.Parent = JoystickBase
+
+    local DeadZoneCorner = Instance.new("UICorner")
+    DeadZoneCorner.CornerRadius = UDim.new(1, 0)
+    DeadZoneCorner.Parent = DeadZoneCircle
+
+    local DeadZoneStroke = Instance.new("UIStroke")
+    DeadZoneStroke.Color = Color3.fromRGB(255, 255, 255)
+    DeadZoneStroke.Transparency = 0.6
+    DeadZoneStroke.Thickness = 1.5
+    DeadZoneStroke.Parent = DeadZoneCircle
+
+    local JoystickKnob = Instance.new("Frame")
+    JoystickKnob.Name = "JoystickKnob"
+    JoystickKnob.Parent = JoystickBase
+    JoystickKnob.Size = UDim2.new(0, KnobSize, 0, KnobSize)
+    JoystickKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+    JoystickKnob.Position = UDim2.new(0.5, 0, 0.5, 0) 
+    JoystickKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    JoystickKnob.BackgroundTransparency = 0.2 
+    JoystickKnob.BorderSizePixel = 0
+    JoystickKnob.ZIndex = 5 
+
+    local KnobCorner = Instance.new("UICorner")
+    KnobCorner.CornerRadius = UDim.new(1, 0) 
+    KnobCorner.Parent = JoystickKnob
+
+    local KnobStroke = Instance.new("UIStroke")
+    KnobStroke.Color = Color3.fromRGB(200, 200, 200)
+    KnobStroke.Transparency = 0.4
+    KnobStroke.Thickness = 2
+    KnobStroke.Parent = JoystickKnob
+
+    -- ==========================================
+    -- 跳跃键模块构建
+    -- ==========================================
+    local JumpButton = Instance.new("TextButton")
+    JumpButton.Name = "JumpButton"
+    JumpButton.Parent = DPadGui
+    JumpButton.Size = UDim2.new(0, JumpBtnSize, 0, JumpBtnSize)
+    JumpButton.AnchorPoint = Vector2.new(1, 1) 
+    JumpButton.Position = UDim2.new(1, -60, 1, -60) 
+    JumpButton.BackgroundColor3 = Color3.fromRGB(240, 240, 245)
+    JumpButton.BackgroundTransparency = 0.65 
+    JumpButton.BorderSizePixel = 0
+    JumpButton.Text = "▲\nJUMP"
+    JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JumpButton.TextTransparency = 0.3
+    JumpButton.Font = Enum.Font.SourceSansBold
+    JumpButton.TextSize = 22
+    JumpButton.AutoButtonColor = false
+    JumpButton.Active = true
+
+    local JumpCorner = Instance.new("UICorner")
+    JumpCorner.CornerRadius = UDim.new(1, 0) 
+    JumpCorner.Parent = JumpButton
+
+    local JumpStroke = Instance.new("UIStroke")
+    JumpStroke.Color = Color3.fromRGB(220, 220, 220)
+    JumpStroke.Transparency = 0.65
+    JumpStroke.Thickness = 1.5
+    JumpStroke.Parent = JumpButton
+
+    -- ==========================================
+    -- 动态 UI 刷新
+    -- ==========================================
+    local function UpdateJoystickUI()
+        KnobSize = math.floor(BaseSize * (2/5))
+        local newDeadZoneRadius = BaseSize / 8
+        JoystickBase.Size = UDim2.new(0, BaseSize, 0, BaseSize)
+        DeadZoneCircle.Size = UDim2.new(0, newDeadZoneRadius * 2, 0, newDeadZoneRadius * 2)
+        JoystickKnob.Size = UDim2.new(0, KnobSize, 0, KnobSize)
+    end
+
+    local function UpdateJumpBtnUI()
+        JumpButton.Size = UDim2.new(0, JumpBtnSize, 0, JumpBtnSize)
+        JumpButton.TextSize = math.floor(JumpBtnSize * 0.22)
+    end
+
+    -- ==========================================
+    -- 核心：原生 360 度矢量移动引擎
+    -- ==========================================
+    local draggingJoystick = false
+    local dragInputJoystick = nil
+    local currentMoveVector = Vector2.new(0, 0)
+
+    local draggingJump = false
+    local dragInputJump = nil
+    local dragStartJump = nil
+    local startPosJump = nil
+    local isJumping = false
+
+    local RunService = game:GetService("RunService")
+    local UserInputService = game:GetService("UserInputService")
+    local movementConnection = nil
+
+    local function handleJoystickInput(inputPosition)
+        local baseCenter = JoystickBase.AbsolutePosition + (JoystickBase.AbsoluteSize / 2)
+        local delta = Vector2.new(inputPosition.X, inputPosition.Y) - baseCenter
+        local maxVisualRadius = (BaseSize - KnobSize) / 2
+        
+        local visualDelta = delta
+        if visualDelta.Magnitude > maxVisualRadius then
+            visualDelta = visualDelta.Unit * maxVisualRadius
+        end
+        
+        JoystickKnob.Position = UDim2.new(0.5, visualDelta.X, 0.5, visualDelta.Y)
+
+        -- 核心：将 UI 的像素偏移转换为 -1 到 1 的标准化方向矢量
+        if delta.Magnitude > (BaseSize / 10) then
+            currentMoveVector = visualDelta / maxVisualRadius
+        else
+            currentMoveVector = Vector2.new(0, 0)
+        end
+    end
+
+    JoystickBase.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingJoystick = true
+            dragInputJoystick = input
+            handleJoystickInput(input.Position)
+        end
+    end)
+
+    JumpButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if JumpBtnDraggable then
+                draggingJump = true
+                dragInputJump = input
+                dragStartJump = input.Position
+                startPosJump = JumpButton.Position
+            else
+                JumpButton.BackgroundTransparency = 0.4 
+                isJumping = true
+            end
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            if draggingJoystick and input == dragInputJoystick then
+                handleJoystickInput(input.Position)
+            end
+            if draggingJump and input == dragInputJump and JumpBtnDraggable then
+                local delta = input.Position - dragStartJump
+                JumpButton.Position = UDim2.new(
+                    startPosJump.X.Scale, startPosJump.X.Offset + delta.X, 
+                    startPosJump.Y.Scale, startPosJump.Y.Offset + delta.Y
+                )
+            end
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input == dragInputJoystick then
+            draggingJoystick = false
+            dragInputJoystick = nil
+            currentMoveVector = Vector2.new(0, 0)
+            game:GetService("TweenService"):Create(JoystickKnob, TweenInfo.new(0.2, Enum.EasingStyle.Bounce), {
+                Position = UDim2.new(0.5, 0, 0.5, 0)
+            }):Play()
+            
+            -- 停止移动
+            local char = game.Players.LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then hum:Move(Vector3.new(0, 0, 0), false) end
+        end
+        
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if draggingJump and input == dragInputJump then
+                draggingJump = false
+                dragInputJump = nil
+            elseif not JumpBtnDraggable then
+                JumpButton.BackgroundTransparency = 0.65
+                isJumping = false
+            end
+        end
+    end)
+
+    -- ==========================================
+    -- UI 控件绑定 & 渲染循环
+    -- ==========================================
+    Tabs.Qwqa:AddToggle("QWQ_Joystick_Toggle", {
+        Title = "显示 360度虚拟摇杆与跳跃键",
+        Default = false,
+        Callback = function(state)
+            DPadGui.Enabled = state 
+            
+            if state then
+                if movementConnection then movementConnection:Disconnect() end
+                movementConnection = RunService.RenderStepped:Connect(function()
+                    local char = game.Players.LocalPlayer.Character
+                    local hum = char and char:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        -- 处理 360 度移动 (传入相机相对矢量, 参数2设为true代表跟随相机方向)
+                        if currentMoveVector.Magnitude > 0 then
+                            hum:Move(Vector3.new(currentMoveVector.X, 0, currentMoveVector.Y), true)
+                        end
+                        -- 处理原生跳跃
+                        if isJumping then
+                            hum.Jump = true
+                        end
+                    end
+                end)
+            else
+                draggingJoystick = false
+                dragInputJoystick = nil
+                draggingJump = false
+                dragInputJump = nil
+                isJumping = false
+                currentMoveVector = Vector2.new(0, 0)
+                JoystickKnob.Position = UDim2.new(0.5, 0, 0.5, 0)
+                
+                if movementConnection then
+                    movementConnection:Disconnect()
+                    movementConnection = nil
+                end
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddToggle("QWQ_JumpBtn_Draggable", {
+        Title = "编辑跳跃键位置 (拖动模式)",
+        Default = false,
+        Callback = function(state)
+            JumpBtnDraggable = state
+            if state then
+                JumpButton.Text = "拖动"
+                JumpButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+            else
+                JumpButton.Text = "▲\nJUMP"
+                JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            end
+        end
+    })
+
+    Tabs.Qwqa:AddSlider("QWQ_Joystick_SizeSlider", {
+        Title = "摇杆大小 (左下角锚定)",
+        Min = 100, Max = 400, Default = 220, Rounding = 0,
+        Callback = function(value)
+            BaseSize = value
+            UpdateJoystickUI()
+        end
+    })
+
+    Tabs.Qwqa:AddSlider("QWQ_JumpBtn_SizeSlider", {
+        Title = "跳跃键独立大小",
+        Min = 50, Max = 200, Default = 100, Rounding = 0,
+        Callback = function(value)
+            JumpBtnSize = value
+            UpdateJumpBtnUI()
+        end
+    })
+
+    Tabs.Qwqa:AddColorpicker("QWQ_Joystick_ColorPicker", {
+        Title = "全局亚克力颜色",
+        Default = Color3.fromRGB(240, 240, 245),
+        Callback = function(value)
+            JoystickBase.BackgroundColor3 = value
+            JumpButton.BackgroundColor3 = value
+        end
+    })
+end
 
 
 
