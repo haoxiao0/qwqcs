@@ -138,6 +138,59 @@ end
 
 
 
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+
+    local CustomAnimIds = {
+        idle = {"rbxassetid://88212525150688", "rbxassetid://88212525150688"},
+        walk = "rbxassetid://124771611518572",
+        run = "rbxassetid://136336776520965",
+        jump = "rbxassetid://80837560162394",
+        fall = "rbxassetid://104594903909683",
+        climb = "rbxassetid://112630540408116",
+        swim = "rbxassetid://98596828035441",
+        swimIdle = "" 
+    }
+
+    local function ApplyAnimations(char)
+        -- 将等待逻辑放入独立线程，防止阻塞主UI的加载
+        task.spawn(function()
+            local animateScript = char:WaitForChild("Animate", 5)
+            if not animateScript then return end
+
+            for state, idData in pairs(CustomAnimIds) do
+                local stateFolder = animateScript:FindFirstChild(state)
+                if stateFolder then
+                    local index = 1
+                    for _, animObj in ipairs(stateFolder:GetChildren()) do
+                        if animObj:IsA("Animation") then
+                            local targetId = type(idData) == "table" and idData[index] or idData
+                            if targetId and targetId ~= "" then
+                                animObj.AnimationId = targetId
+                            end
+                            index = index + 1
+                        end
+                    end
+                end
+            end
+
+            animateScript.Disabled = true
+            task.wait(0.05)
+            animateScript.Disabled = false
+        end)
+    end
+
+    if LocalPlayer.Character then
+        ApplyAnimations(LocalPlayer.Character)
+    end
+
+    -- 防止多次点击执行导致事件重复绑定和内存泄漏
+    if getgenv()._AutoAnimConnection then
+        getgenv()._AutoAnimConnection:Disconnect()
+    end
+    getgenv()._AutoAnimConnection = LocalPlayer.CharacterAdded:Connect(ApplyAnimations)
+end)
 
 
 
