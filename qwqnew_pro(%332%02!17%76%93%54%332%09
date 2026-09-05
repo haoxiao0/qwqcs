@@ -4,7 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "QWQ",
-    SubTitle = "7.9.6优化版",
+    SubTitle = "8.0优化版",
     TabWidth = 100,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
@@ -768,6 +768,7 @@ Tabs.Qwqa:AddButton({
 loadstring(Game:HttpGet("https://raw.githubusercontent.com/haoxiao0/qwqcs/refs/heads/main/tpfly.lua"))()
     end
 })
+
 Tabs.Qwqa:AddButton({
     Title = "点击传送工具",
     Callback = function()
@@ -775,7 +776,12 @@ mouse = game.Players.LocalPlayer:GetMouse() tool = Instance.new("Tool") tool.Req
     end
 })
 
-
+Tabs.Qwqa:AddButton({
+    Title = "动画包",
+    Callback = function()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugghhj_hugg/refs/heads/main/dzjb%2520%2514%2542%2533%25290%2512%2587%2599_key"))()
+    end
+})
 
 local QWQ_Original_FPDH = workspace.FallenPartsDestroyHeight
 
