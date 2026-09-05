@@ -783,6 +783,13 @@ loadstring(Game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugg
     end
 })
 
+Tabs.Qwqa:AddButton({
+    Title = "老外的隐身",
+    Callback = function()
+loadstring(Game:HttpGet("https://pastebin.com/raw/3Rnd9rHf"))()
+    end
+})
+
 local QWQ_Original_FPDH = workspace.FallenPartsDestroyHeight
 
 Tabs.Qwqa:AddToggle("AntiVoid_Toggle", {
