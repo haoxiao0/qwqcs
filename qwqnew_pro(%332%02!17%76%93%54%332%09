@@ -784,9 +784,16 @@ loadstring(Game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugg
 })
 
 Tabs.Qwqa:AddButton({
-    Title = "老外的隐身",
+    Title = "隐身",
     Callback = function()
-loadstring(Game:HttpGet("https://pastebin.com/raw/3Rnd9rHf"))()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugghhj_hugg/refs/heads/main/yingxing.%2543%2570%2543%2566%2534%2586%2545"))()
+    end
+})
+
+Tabs.Qwqa:AddButton({
+    Title = "武器修改（如果武器脚本在本地）",
+    Callback = function()
+loadstring(Game:HttpGet("https://raw.githubusercontent.com/wsygck/dfvcghhvbn_ugghhj_hugg/refs/heads/main/%2534%2522%2512%2554%2566%2578%2554wqxg"))()
     end
 })
 
